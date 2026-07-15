@@ -1,0 +1,165 @@
+.tf-grid-layout {
+  display: grid !important;
+}
+
+.card-product .badge-box .badge-item.trending {
+  background: #8224e3 !important;
+}
+.card-product.card_product--V01.out-of-stock .list-product-btn {
+  display: none;
+  visibility: hidden;
+}
+.card-product .sale-marquee-box {
+  --sale-marquee-color: #FFFFFF;
+  --sale-marquee-bg: var(--primary);
+  background-color: var(--sale-marquee-bg);
+  color: var(--sale-marquee-color);
+}
+.card-product .wcboost-products-compare-button__icon,
+.card-product .wcboost-wishlist-button__icon {
+  margin: 0;
+  padding: 0;
+  line-height: 18px;
+}
+
+.list-color-product {
+  display: flex;
+  gap: 5px;
+}
+.list-color-product .list-color-item {
+  width: 24px;
+  height: 24px;
+}
+.list-color-product .list-color-item img {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+}
+
+.icon-grid-5 {
+  display: grid;
+  gap: 2px;
+  grid-template-columns: repeat(5, 1fr);
+}
+
+.icon-grid-6 {
+  display: grid;
+  gap: 2px;
+  grid-template-columns: repeat(6, 1fr);
+}
+
+.icon-grid-7 {
+  display: grid;
+  gap: 2px;
+  grid-template-columns: repeat(7, 1fr);
+}
+
+.icon-grid-5 span,
+.icon-grid-6 span,
+.icon-grid-7 span {
+  display: inline-block;
+  width: 5px;
+  height: 23px;
+  background-color: var(--line-3);
+  -webkit-transition: all 0.3s ease;
+  -moz-transition: all 0.3s ease;
+  -ms-transition: all 0.3s ease;
+  -o-transition: all 0.3s ease;
+  transition: all 0.3s ease;
+}
+
+.modal-unavailable .wpcf7 {
+  z-index: 1;
+}
+.modal-unavailable .icon-close-popup {
+  z-index: 2;
+}
+.modal-unavailable .tf-btn {
+  padding: 13px 40px;
+}
+.modal-unavailable .style-border input,
+.modal-unavailable .style-border textarea {
+  padding: 11px 12px;
+  box-shadow: none;
+  border: 1px solid var(--line-8);
+}
+.modal-unavailable .style-border textarea:focus {
+  border-color: var(--primary);
+}
+.modal-unavailable .wpcf7-response-output {
+  padding-top: 0 !important;
+  margin-top: 0 !important;
+}
+
+.vemus-load-more {
+  margin-top: 64px;
+}
+
+.vemus-box-image-end {
+  order: 1;
+}
+
+.tf-control-filter .canvas-body .apply-filter-wrap .title,
+.tf-control-filter .canvas-body .apply-filter-wrap .product-count-grid {
+  display: grid !important;
+}
+
+.vemus-shop-pagination {
+  font-size: 16px;
+  line-height: 24px;
+}
+.vemus-shop-pagination ul.page-numbers {
+  display: flex;
+  gap: 10px;
+}
+.vemus-shop-pagination .page-numbers {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+#load-more-btn .spinner-circle {
+  display: none;
+}
+#load-more-btn.loading .spinner-circle {
+  display: block;
+}
+
+.attribute-color-type {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+}
+
+.widget-facet .attribute-button-type-list {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.widget-facet .attribute-button-type-list .check-item {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--line);
+  background-color: var(--white);
+  cursor: pointer;
+  -webkit-transition: all 0.3s ease;
+  -moz-transition: all 0.3s ease;
+  -ms-transition: all 0.3s ease;
+  -o-transition: all 0.3s ease;
+  transition: all 0.3s ease;
+  position: relative;
+}
+.widget-facet .attribute-button-type-list .check-item:hover, .widget-facet .attribute-button-type-list .check-item.active {
+  background-color: var(--main);
+  color: var(--white);
+}
+.widget-facet .attribute-button-type-list .attr-text {
+  font-weight: 400;
+  font-size: 18px;
+  line-height: 28px;
+}
+
+/*# sourceMappingURL=vemus-shop.css.map */

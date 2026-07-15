@@ -1,0 +1,83 @@
+name: WordPress Continuous Deployment (CD)
+
+on:
+  push:
+    branches: [ "main", "master" ]
+    paths:
+      - 'app/public/wp-content/themes/vemus-child/**'
+      - 'app/public/wp-content/plugins/vemus-addon/**'
+  workflow_dispatch:
+    inputs:
+      deploy_mode:
+        description: 'Select Deployment Scope'
+        required: true
+        default: 'code_only'
+        type: choice
+        options:
+          - code_only
+          - full_sync_including_uploads
+          - database_and_code
+
+jobs:
+  deploy:
+    name: Deploy to Hostinger Production (rudraspirit.com)
+    runs-on: ubuntu-latest
+    env:
+      SSH_HOST: ${{ secrets.SSH_HOST || '217.21.74.44' }}
+      SSH_PORT: ${{ secrets.SSH_PORT || '65002' }}
+      SSH_USER: ${{ secrets.SSH_USER || 'u362580417' }}
+      REMOTE_PATH: "/home/u362580417/domains/rudraspirit.com/public_html"
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup SSH Authentication
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Verify Remote Server Connection & WP-CLI
+        run: |
+          echo "Verifying connection to $SSH_USER@$SSH_HOST:$SSH_PORT..."
+          ssh -o StrictHostKeyChecking=accept-new -p $SSH_PORT $SSH_USER@$SSH_HOST "export PATH=/opt/alt/php83/usr/bin:\$PATH; cd $REMOTE_PATH && wp --version"
+
+      - name: Deploy Custom Code (Theme & Plugins)
+        if: ${{ github.event_name == 'push' || github.event.inputs.deploy_mode == 'code_only' }}
+        run: |
+          echo "Syncing child theme and custom addon via rsync..."
+          rsync -avz -e "ssh -p $SSH_PORT -o StrictHostKeyChecking=accept-new" \
+            --exclude='node_modules' --exclude='.git' --exclude='*.log' --exclude='*.disabled' \
+            app/public/wp-content/themes/vemus-child/ \
+            $SSH_USER@$SSH_HOST:$REMOTE_PATH/wp-content/themes/vemus-child/
+
+          rsync -avz -e "ssh -p $SSH_PORT -o StrictHostKeyChecking=accept-new" \
+            --exclude='node_modules' --exclude='.git' --exclude='*.log' --exclude='*.disabled' \
+            app/public/wp-content/plugins/vemus-addon/ \
+            $SSH_USER@$SSH_HOST:$REMOTE_PATH/wp-content/plugins/vemus-addon/
+
+      - name: Deploy Full wp-content including Uploads Images
+        if: ${{ github.event.inputs.deploy_mode == 'full_sync_including_uploads' }}
+        run: |
+          echo "Syncing entire wp-content (themes, plugins, and uploads images)..."
+          rsync -avz -e "ssh -p $SSH_PORT -o StrictHostKeyChecking=accept-new" \
+            --exclude='cache/' --exclude='*.log' --exclude='advanced-cache.php' --exclude='object-cache.php' \
+            app/public/wp-content/ \
+            $SSH_USER@$SSH_HOST:$REMOTE_PATH/wp-content/
+
+      - name: Flush WordPress Cache & Rewrite Rules
+        run: |
+          echo "Flushing production object cache and permalinks..."
+          ssh -p $SSH_PORT -o StrictHostKeyChecking=accept-new $SSH_USER@$SSH_HOST "export PATH=/opt/alt/php83/usr/bin:\$PATH; cd $REMOTE_PATH && wp cache flush && wp rewrite flush"
+
+      - name: Post-Deployment Health Check
+        run: |
+          echo "Testing live HTTP response..."
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://rudraspirit.com/)
+          if [ "$STATUS" -ne 200 ]; then
+            echo "ERROR: Live site returned HTTP $STATUS instead of 200 after deployment!"
+            exit 1
+          fi
+          echo "SUCCESS: Live site is online and responding with HTTP 200 OK!"

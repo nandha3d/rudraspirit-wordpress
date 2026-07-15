@@ -1,0 +1,37 @@
+stages:
+  - lint
+  - deploy
+
+variables:
+  REMOTE_PATH: "/home/u362580417/domains/rudraspirit.com/public_html"
+
+php_syntax_check:
+  stage: lint
+  image: php:8.2-cli
+  script:
+    - echo "Checking syntax of all PHP files in custom theme and addon..."
+    - find app/public/wp-content/themes/vemus-child app/public/wp-content/plugins/vemus-addon -type f -name "*.php" -print0 | xargs -0 -n1 -P4 php -l
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_BRANCH == "main"'
+
+deploy_hostinger:
+  stage: deploy
+  image: alpine:latest
+  before_script:
+    - apk add --no-cache openssh-client rsync curl
+    - eval $(ssh-agent -s)
+    - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+    - ssh-keyscan -p ${SSH_PORT:-65002} ${SSH_HOST:-217.21.74.44} >> ~/.ssh/known_hosts
+    - chmod 644 ~/.ssh/known_hosts
+  script:
+    - echo "Syncing theme and custom addon..."
+    - rsync -avz -e "ssh -p ${SSH_PORT:-65002}" --exclude='node_modules' --exclude='.git' app/public/wp-content/themes/vemus-child/ ${SSH_USER:-u362580417}@${SSH_HOST:-217.21.74.44}:$REMOTE_PATH/wp-content/themes/vemus-child/
+    - rsync -avz -e "ssh -p ${SSH_PORT:-65002}" --exclude='node_modules' --exclude='.git' app/public/wp-content/plugins/vemus-addon/ ${SSH_USER:-u362580417}@${SSH_HOST:-217.21.74.44}:$REMOTE_PATH/wp-content/plugins/vemus-addon/
+    - ssh -p ${SSH_PORT:-65002} ${SSH_USER:-u362580417}@${SSH_HOST:-217.21.74.44} "cd $REMOTE_PATH && wp cache flush && wp rewrite flush"
+    - echo "Post-deployment health check..."
+    - curl -s -I https://rudraspirit.com | grep "HTTP/"
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'

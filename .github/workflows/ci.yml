@@ -1,0 +1,66 @@
+name: WordPress Continuous Integration (CI)
+
+on:
+  push:
+    branches: [ "main", "master", "develop", "staging" ]
+    paths:
+      - 'app/public/wp-content/themes/vemus-child/**'
+      - 'app/public/wp-content/plugins/vemus-addon/**'
+  pull_request:
+    branches: [ "main", "master", "develop" ]
+
+jobs:
+  php-lint:
+    name: PHP Syntax & Code Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP Environment
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          coverage: none
+          tools: phpcs
+
+      - name: Check PHP Syntax (Linter)
+        run: |
+          echo "Checking syntax of all PHP files in custom theme and addon..."
+          find app/public/wp-content/themes/vemus-child app/public/wp-content/plugins/vemus-addon -type f -name "*.php" -print0 | while IFS= read -r -d '' file; do
+            php -l "$file" || exit 1
+          done
+          echo "All PHP syntax checks passed successfully!"
+
+      - name: Check for Accidentally Committed Sensitive Files
+        run: |
+          echo "Scanning for sensitive artifacts or exposed database configurations..."
+          if [ -f "app/public/wp-config.php" ]; then
+            echo "WARNING: wp-config.php is present in repo. Ensure no production passwords or keys are hardcoded."
+          fi
+          if find . -maxdepth 3 -name "*.sql" -o -name "*.tar.gz" | grep -q .; then
+            echo "ERROR: Found SQL dumps or large archives in repository. Remove before merging to main."
+            find . -maxdepth 3 -name "*.sql" -o -name "*.tar.gz"
+            exit 1
+          fi
+          echo "Security scan passed."
+
+  asset-validation:
+    name: Asset & Stylesheet Validation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Validate Theme Header & CSS Structure
+        run: |
+          THEME_STYLE="app/public/wp-content/themes/vemus-child/style.css"
+          if [ ! -f "$THEME_STYLE" ]; then
+            echo "ERROR: Child theme style.css missing at $THEME_STYLE"
+            exit 1
+          fi
+          if ! grep -q "Theme Name:" "$THEME_STYLE"; then
+            echo "ERROR: style.css missing required WordPress Theme Name header."
+            exit 1
+          fi
+          echo "Theme style.css validation passed."

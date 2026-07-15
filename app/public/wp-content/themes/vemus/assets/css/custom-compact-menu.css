@@ -1,0 +1,236 @@
+/* Compact Navigation Menu - Custom Styles */
+
+/* ========================================
+   HIDE CURRENCY/LANGUAGE CHANGER
+   ======================================== */
+.header-language,
+.type-languages,
+.image-select,
+.gtranslate_wrapper,
+.gt_selector,
+.gt_float_switcher,
+.language-switcher,
+#gt-wrapper,
+[class*="language"],
+[class*="currency"],
+.wpml-ls,
+.trp-language-switcher,
+select.goog-te-combo,
+.goog-te-gadget,
+#google_translate_element,
+.skiptranslate {
+    display: none !important;
+    visibility: hidden !important;
+}
+
+/* ========================================
+   LOGO - ALIGN LEFT
+   ======================================== */
+.logo-header {
+    margin-right: auto !important;
+    margin-left: 0 !important;
+}
+
+.wrapper-header {
+    justify-content: flex-start !important;
+}
+
+.header-default .wrapper-header {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+}
+
+/* ========================================
+   HEADER - WHITE BACKGROUND
+   ======================================== */
+#header,
+.header-default,
+header#header {
+    background-color: #ffffff !important;
+    position: relative !important;
+    margin-bottom: 0 !important;
+}
+
+/* Remove header absolute positioning so image starts below */
+.header-absolute #header {
+    margin-bottom: 0 !important;
+    position: relative !important;
+}
+
+/* Ensure hero/banner starts below header */
+.tf-slideshow,
+.tf-banner,
+.hero-section,
+[class*="slider"],
+[class*="banner"] {
+    margin-top: 0 !important;
+}
+
+/* Center content wrapper - logo left, menu center, icons right */
+.box-navigation {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+}
+
+/* ========================================
+   MENU - COMPACT & ALIGNED
+   ======================================== */
+/* Reduce padding between menu items */
+.header-default .box-nav-menu>li,
+.header-default .box-nav-menu>.menu-item,
+.header-default .menu:not(:has(.elementor))>li,
+.header-default .menu:not(:has(.elementor))>.menu-item,
+#mainnav>ul>li {
+    padding-left: 6px !important;
+    padding-right: 6px !important;
+}
+
+/* Reduce font size for menu links */
+.header-default .box-nav-menu .item-link,
+.header-default .menu:not(:has(.elementor)) .item-link,
+#mainnav>ul>li>a {
+    font-size: 11px !important;
+    line-height: 16px !important;
+    text-transform: uppercase;
+    font-weight: 500 !important;
+    white-space: nowrap;
+}
+
+/* Make menu text slightly more compact */
+.menu-link-text {
+    font-size: 11px !important;
+    letter-spacing: 0;
+}
+
+/* Reduce gap between icon items in nav */
+.header-default .nav-icon {
+    gap: 10px !important;
+}
+
+/* Reduce logo size if needed */
+.logo-header img {
+    max-height: 50px;
+}
+
+/* Adjust header height to be more compact */
+.header-default .wrapper-header {
+    min-height: 50px !important;
+    padding: 5px 0 !important;
+}
+
+/* Reduce vertical padding on menu items */
+.header-default .box-nav-menu>li,
+.header-default .box-nav-menu>.menu-item {
+    padding-top: 15px !important;
+    padding-bottom: 15px !important;
+}
+
+/* Fix menu alignment */
+.header-default .box-nav-menu,
+.header-default .menu:not(:has(.elementor)) {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex-wrap: nowrap !important;
+}
+
+/* Ensure menu items stay on one line */
+#mainnav>ul {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    align-items: center !important;
+}
+
+/* ========================================
+   MOBILE ADJUSTMENTS
+   ======================================== */
+@media (max-width: 1199px) {
+    .logo-header {
+        position: static !important;
+        transform: none !important;
+        margin-left: 0 !important;
+    }
+
+    .header-default .wrapper-header {
+        justify-content: space-between !important;
+    }
+}
+
+/* ========================================
+   ROYAL ADDONS HEADER SUPPORT
+   ======================================== */
+/* Ensure Royal Addons header displays properly */
+.wpr-header-wrap,
+.wpr-template-header {
+    background-color: #ffffff;
+}
+
+/* Ensure content starts below header */
+.wpr-header-wrap+#main-content,
+.wpr-template-header+#main-content {
+    margin-top: 0;
+}
+
+/* ========================================
+   ROYAL ELEMENTOR NAV - JUSTIFY ALIGNMENT
+   ======================================== */
+/* Make Royal Addons nav menu justify/spread evenly */
+.wpr-nav-menu,
+.wpr-nav-menu>ul,
+.wpr-menu-container,
+.wpr-nav-menu-container {
+    width: 100% !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    /* Justify - items spread evenly */
+}
+
+.wpr-nav-menu>ul>li {
+    flex: 1 !important;
+    text-align: center !important;
+}
+
+.wpr-nav-menu>ul>li>a {
+    justify-content: center !important;
+    width: 100% !important;
+}
+
+/* Alternative: Space-around for more even distribution */
+.wpr-nav-menu.justify-around>ul {
+    justify-content: space-around !important;
+}
+
+/* Alternative: Center menu but spread items */
+.wpr-nav-menu.justify-center>ul {
+    justify-content: center !important;
+    gap: 30px;
+}
+
+/* Ensure Royal Elementor menu takes full width */
+.elementor-widget-wpr-nav-menu {
+    width: 100% !important;
+}
+
+.elementor-widget-wpr-nav-menu .elementor-widget-container {
+    width: 100% !important;
+}
+
+/* Fix any flex wrapper issues */
+.wpr-nav-menu-horizontal {
+    width: 100% !important;
+}
+
+.wpr-nav-menu-horizontal>ul {
+    width: 100% !important;
+    display: flex !important;
+    justify-content: space-between !important;
+}
+
+/* Don't hide our currency switcher */
+.vemus-currency-switcher,
+.vemus-currency-switcher[class*="currency"] {
+    display: inline-flex !important;
+    visibility: visible !important;
+}

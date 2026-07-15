@@ -1,0 +1,289 @@
+<title>Restart Fee — rudraspirit.com</title>
+<style>
+  :root{
+    --bg:#FBF8F3; --surface:#FFFFFF; --ink:#241D14; --muted:#6E6353;
+    --border:#E8E0D3; --border-strong:#D9CEBB;
+    --accent:#A96E1B; --accent-deep:#7E4F0F; --accent-soft:#F3E7D2;
+    --good:#3C6B45;
+    --shadow:0 1px 2px rgba(36,29,20,.05), 0 12px 32px -12px rgba(36,29,20,.14);
+    --maxw:44rem;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{
+      --bg:#151109; --surface:#1E1810; --ink:#EFE8DA; --muted:#A79A85;
+      --border:#332A1C; --border-strong:#413524;
+      --accent:#D89C3E; --accent-deep:#E7B45E; --accent-soft:#2A2213;
+      --good:#7FB588;
+      --shadow:0 1px 2px rgba(0,0,0,.4), 0 16px 40px -16px rgba(0,0,0,.6);
+    }
+  }
+  :root[data-theme="light"]{
+    --bg:#FBF8F3; --surface:#FFFFFF; --ink:#241D14; --muted:#6E6353;
+    --border:#E8E0D3; --border-strong:#D9CEBB;
+    --accent:#A96E1B; --accent-deep:#7E4F0F; --accent-soft:#F3E7D2; --good:#3C6B45;
+    --shadow:0 1px 2px rgba(36,29,20,.05), 0 12px 32px -12px rgba(36,29,20,.14);
+  }
+  :root[data-theme="dark"]{
+    --bg:#151109; --surface:#1E1810; --ink:#EFE8DA; --muted:#A79A85;
+    --border:#332A1C; --border-strong:#413524;
+    --accent:#D89C3E; --accent-deep:#E7B45E; --accent-soft:#2A2213; --good:#7FB588;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 16px 40px -16px rgba(0,0,0,.6);
+  }
+
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:"Segoe UI",-apple-system,BlinkMacSystemFont,Roboto,Helvetica,Arial,sans-serif;
+    font-size:16px; line-height:1.6; -webkit-font-smoothing:antialiased;
+    font-variant-numeric:tabular-nums;
+  }
+  .wrap{max-width:var(--maxw); margin:0 auto; padding:2.5rem 1.5rem 4rem}
+
+  /* toolbar (screen only) */
+  .toolbar{
+    max-width:var(--maxw); margin:1.25rem auto -0.5rem; padding:0 1.5rem;
+    display:flex; gap:.6rem; justify-content:flex-end; align-items:center;
+  }
+  .hint{margin-right:auto; color:var(--muted); font-size:.8rem}
+  button{
+    font:inherit; font-size:.85rem; font-weight:600; cursor:pointer;
+    color:var(--surface); background:var(--accent); border:1px solid var(--accent-deep);
+    padding:.5rem .9rem; border-radius:8px; transition:background .15s,transform .05s;
+  }
+  button.ghost{background:transparent; color:var(--accent); border-color:var(--border-strong)}
+  button:hover{background:var(--accent-deep)}
+  button.ghost:hover{background:var(--accent-soft); color:var(--accent-deep)}
+  button:active{transform:translateY(1px)}
+  button:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+
+  .sheet{
+    background:var(--surface); border:1px solid var(--border);
+    border-radius:14px; box-shadow:var(--shadow); overflow:hidden;
+  }
+  .sheet-pad{padding:clamp(1.5rem,4vw,3rem)}
+
+  /* masthead */
+  .mast{border-bottom:1px solid var(--border); padding-bottom:1.5rem}
+  .eyebrow{
+    font-size:.72rem; letter-spacing:.16em; text-transform:uppercase;
+    color:var(--accent); font-weight:700; margin:0 0 .55rem;
+    display:flex; align-items:center; gap:.55rem;
+  }
+  .eyebrow::before{content:""; width:1.6rem; height:2px; background:var(--accent); display:inline-block}
+  h1{
+    font-size:clamp(1.7rem,4.5vw,2.35rem); line-height:1.12; margin:0;
+    letter-spacing:-.02em; text-wrap:balance; font-weight:700;
+  }
+  .sub{color:var(--muted); margin:.6rem 0 0; font-size:1rem}
+
+  .meta{
+    display:grid; grid-template-columns:repeat(2,1fr); gap:.9rem 2rem;
+    margin-top:1.5rem;
+  }
+  @media (max-width:32rem){.meta{grid-template-columns:1fr}}
+  .meta div{display:flex; flex-direction:column; gap:.15rem}
+  .meta dt{font-size:.7rem; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); font-weight:700}
+  .meta dd{margin:0; font-weight:600}
+  .paid{color:var(--good); font-weight:700}
+
+  /* editable fields */
+  .fill{
+    border-bottom:1.5px dotted var(--border-strong); min-width:7ch;
+    padding:0 .15rem; outline:none; color:var(--ink); font-weight:600;
+  }
+  .fill:empty::before{content:attr(data-ph); color:var(--muted); font-weight:400; font-style:italic}
+  .fill:focus{border-bottom-color:var(--accent); background:var(--accent-soft)}
+
+  section{margin-top:2.25rem}
+  h2{
+    font-size:1.02rem; margin:0 0 .85rem; letter-spacing:-.01em;
+    display:flex; align-items:baseline; gap:.65rem;
+  }
+  h2 .n{
+    color:var(--accent); font-size:.8rem; font-weight:700;
+    font-variant-numeric:tabular-nums; letter-spacing:.02em;
+    border:1px solid var(--border-strong); border-radius:6px;
+    padding:.05rem .4rem; line-height:1.4; flex:none;
+  }
+  p{margin:.7rem 0}
+  strong{font-weight:700}
+
+  table{width:100%; border-collapse:collapse; margin:.4rem 0; font-size:.92rem}
+  .tbl-scroll{overflow-x:auto}
+  th,td{text-align:left; padding:.6rem .75rem; vertical-align:top; border-bottom:1px solid var(--border)}
+  thead th{
+    font-size:.68rem; letter-spacing:.09em; text-transform:uppercase;
+    color:var(--muted); font-weight:700; border-bottom:1.5px solid var(--border-strong);
+  }
+  tbody tr:last-child td{border-bottom:none}
+  td:first-child{font-weight:600; white-space:nowrap}
+  @media (max-width:34rem){td:first-child{white-space:normal}}
+
+  /* fee callout */
+  .fee{
+    margin-top:2.25rem; border:1px solid var(--border-strong);
+    border-radius:12px; overflow:hidden; background:linear-gradient(180deg,var(--accent-soft),transparent);
+  }
+  .fee-top{
+    display:flex; flex-wrap:wrap; align-items:baseline; gap:.4rem 1rem;
+    padding:1.25rem 1.5rem; border-bottom:1px dashed var(--border-strong);
+  }
+  .fee-label{font-size:.72rem; letter-spacing:.14em; text-transform:uppercase; color:var(--accent-deep); font-weight:700; width:100%}
+  .fee-amt{font-size:2.4rem; font-weight:800; letter-spacing:-.02em; line-height:1}
+  .fee-amt .cur{font-size:1.4rem; font-weight:700; vertical-align:top; margin-right:.1rem}
+  .fee-tag{font-size:.85rem; color:var(--muted); font-weight:600}
+  .fee-basis{padding:1rem 1.5rem 1.25rem; font-size:.88rem; color:var(--muted); margin:0}
+  .fee-basis b{color:var(--ink)}
+
+  ul{margin:.6rem 0; padding-left:0; list-style:none; display:flex; flex-direction:column; gap:.4rem}
+  ul li{position:relative; padding-left:1.4rem}
+  ul li::before{content:""; position:absolute; left:.15rem; top:.62rem; width:.4rem; height:.4rem; background:var(--accent); border-radius:50%}
+  ul.no li::before{background:var(--muted); width:.55rem; height:2px; border-radius:0; top:.75rem}
+
+  ol.terms{margin:.6rem 0; padding-left:0; counter-reset:t; list-style:none; display:flex; flex-direction:column; gap:.7rem}
+  ol.terms li{position:relative; padding-left:2.1rem; counter-increment:t}
+  ol.terms li::before{
+    content:counter(t); position:absolute; left:0; top:0;
+    width:1.5rem; height:1.5rem; border-radius:50%; background:var(--accent); color:#fff;
+    font-size:.78rem; font-weight:700; display:flex; align-items:center; justify-content:center;
+  }
+  .deadline{color:var(--accent-deep); font-weight:700}
+
+  .clause{
+    border-left:3px solid var(--accent); background:var(--accent-soft);
+    padding:1rem 1.25rem; border-radius:0 8px 8px 0; margin:1rem 0;
+    font-size:.92rem;
+  }
+  .clause p{margin:.4rem 0}
+
+  .sign{
+    margin-top:2.5rem; padding-top:1.5rem; border-top:1px solid var(--border);
+    display:grid; grid-template-columns:1fr 1fr; gap:2rem; font-size:.85rem; color:var(--muted);
+  }
+  @media (max-width:32rem){.sign{grid-template-columns:1fr}}
+  .sign .line{border-bottom:1px solid var(--border-strong); height:2rem; margin-bottom:.4rem}
+
+  @media print{
+    :root{--bg:#fff; --surface:#fff; --shadow:none}
+    body{font-size:11.5pt}
+    .toolbar{display:none}
+    .wrap{padding:0; max-width:100%}
+    .sheet{border:none; border-radius:0; box-shadow:none}
+    .sheet-pad{padding:0}
+    .fee,.clause{-webkit-print-color-adjust:exact; print-color-adjust:exact}
+    section{break-inside:avoid}
+  }
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="toolbar">
+  <span class="hint">Tip: click the dotted fields to fill in name, date &amp; fee — then Print / Save as PDF.</span>
+  <button class="ghost" onclick="document.documentElement.setAttribute('data-theme', document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark')">Toggle theme</button>
+  <button onclick="window.print()">Print / Save PDF</button>
+</div>
+
+<div class="wrap">
+  <article class="sheet">
+    <div class="sheet-pad">
+
+      <header class="mast">
+        <p class="eyebrow">Project Reactivation Notice</p>
+        <h1>Restart Fee — rudraspirit.com</h1>
+        <p class="sub">Reactivating the Rudraksha e-commerce website after a dormancy period.</p>
+        <dl class="meta">
+          <div><dt>Project</dt><dd>rudraspirit.com</dd></div>
+          <div><dt>Original value</dt><dd>₹40,000 &nbsp;<span class="paid">· Paid in full</span></dd></div>
+          <div><dt>Dormant</dt><dd>~6 months</dd></div>
+          <div><dt>Date</dt><dd><span class="fill" contenteditable="true" data-ph="dd / mm / yyyy"></span></dd></div>
+          <div><dt>Prepared for</dt><dd><span class="fill" contenteditable="true" data-ph="Client name"></span></dd></div>
+          <div><dt>Prepared by</dt><dd><span class="fill" contenteditable="true" data-ph="Your name"></span></dd></div>
+        </dl>
+      </header>
+
+      <section>
+        <h2><span class="n">1</span> Context</h2>
+        <p>The rudraspirit.com project was completed, delivered, and <strong>paid in full (₹40,000)</strong>. Work then paused for roughly <strong>6 months</strong> with no active development or feedback.</p>
+        <p>Because the original scope was fully delivered and paid, there is <strong>no outstanding balance and no kill fee</strong> involved. Resuming, however, is not a free continuation — a dormant project must be brought back to a working, current, and deployable state before new work can begin. That reactivation effort is what the restart fee covers.</p>
+        <div class="clause">
+          <p><strong>Why an extra charge?</strong> The original ₹40,000 paid for building and delivering the site — not for holding it ready indefinitely. In the 6-month gap, resources moved to other clients and the site fell behind on updates and security. Getting it back to a safe, current, deployable state — and reserving time on the schedule again — is fresh work that wasn't part of the completed project. The restart fee pays for that, and nothing more.</p>
+        </div>
+      </section>
+
+      <section>
+        <h2><span class="n">2</span> Why a restart fee applies</h2>
+        <p>Six months of dormancy creates real, billable work before development can resume:</p>
+        <div class="tbl-scroll">
+          <table>
+            <thead><tr><th>Reactivation task</th><th>Why it's needed after 6 months</th></tr></thead>
+            <tbody>
+              <tr><td>Rebuild local dev environment</td><td>Site re-imported into LocalWP; database, config, and URLs re-wired</td></tr>
+              <tr><td>Re-establish deployment</td><td>New SSH keys, deploy scripts, and live-server sync set up from scratch</td></tr>
+              <tr><td>WordPress &amp; plugin updates</td><td>6 months of updates for WooCommerce, Elementor, and other plugins</td></tr>
+              <tr><td>Security review &amp; patching</td><td>Dormant sites accumulate known vulnerabilities that must be patched</td></tr>
+              <tr><td>PHP / server compatibility</td><td>Host environment and PHP versions move on; code re-verified</td></tr>
+              <tr><td>Data &amp; content reconcile</td><td>Live vs. local database and media brought back in sync</td></tr>
+              <tr><td>Context re-familiarization</td><td>Time to reload full project context after moving to other work</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>This is standard practice: stalled projects are not resumed for free, because resources have been reallocated and pivoting back costs time.</p>
+      </section>
+
+      <div class="fee">
+        <div class="fee-top">
+          <span class="fee-label">Reactivation (restart) fee — one-time, flat</span>
+          <span class="fee-amt"><span class="cur">₹</span><span class="fill" contenteditable="true" style="min-width:4ch">6,000</span></span>
+          <span class="fee-tag">payable in advance, before work resumes</span>
+        </div>
+        <p class="fee-basis">Basis: ~<b>15%</b> of the original ₹40,000 project value — within the standard <b>10–20%</b> range for reactivating paused work. This is a flat reactivation charge, <b>not</b> a new-project quote. Reasonable range for this project: <b>₹4,000 – ₹8,000</b>.</p>
+      </div>
+
+      <section>
+        <h2><span class="n">3</span> What the fee includes</h2>
+        <ul>
+          <li>Full local environment rebuild</li>
+          <li>Live deployment pipeline setup</li>
+          <li>Core / plugin / theme updates to current, stable versions</li>
+          <li>Security patching and a basic compatibility pass</li>
+          <li>Project placed back on the active schedule</li>
+        </ul>
+        <p style="margin-top:1.1rem"><strong>Not included</strong></p>
+        <ul class="no">
+          <li>Any <strong>new</strong> features, redesigns, or scope changes — quoted separately</li>
+          <li>Ongoing maintenance / retainer — optional, see section 5</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2><span class="n">4</span> Terms to resume</h2>
+        <ol class="terms">
+          <li>Restart fee of <strong>₹<span class="fill" contenteditable="true" style="min-width:4ch">6,000</span></strong> payable <strong>in advance</strong>, before development resumes.</li>
+          <li>Any new work beyond the original delivered scope is quoted and approved separately.</li>
+          <li><span class="deadline">Response deadline: 5 days</span> from the date above. Without confirmation in 5 days, the project stays closed, no resources are reserved, and a fresh reactivation quote at then-current rates will be required later.</li>
+        </ol>
+      </section>
+
+      <section>
+        <h2><span class="n">5</span> Going forward</h2>
+        <p>To prevent uncompensated stalls in future, the following applies to resumed and new work:</p>
+        <div class="clause">
+          <p><strong>Dormancy clause.</strong> If the project receives no client feedback or approval for <strong>15 consecutive days</strong>, it is automatically marked <em>paused</em>. Resuming requires a restart fee of 10–20% of project value (or a flat reactivation fee), payable before work continues.</p>
+          <p>After <strong>30 days</strong> of inactivity the project may be closed and final-invoiced for work completed to date.</p>
+        </div>
+        <p>Optional: a monthly <strong>maintenance retainer</strong> (updates, backups, security, uptime) keeps the site current and avoids future reactivation fees entirely — quote available on request.</p>
+      </section>
+
+      <div class="sign">
+        <div>
+          <div class="line"></div>
+          Client — signature &amp; date
+        </div>
+        <div>
+          <div class="line"></div>
+          <span class="fill" contenteditable="true" data-ph="Your name"></span> · <span class="fill" contenteditable="true" data-ph="phone / email"></span>
+        </div>
+      </div>
+
+    </div>
+  </article>
+</div>
