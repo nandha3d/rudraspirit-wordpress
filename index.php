@@ -1,80 +1,61 @@
 <?php
 /**
- * Root index.php bridge for Hostinger Git deployment + deep diagnostic scanner.
+ * Root index.php bridge for Hostinger Git deployment + deep diagnostic & auto-recovery.
  */
 
 if ( isset( $_GET['vemus_debug'] ) && $_GET['vemus_debug'] === '1' ) {
     header( 'Content-Type: text/plain' );
-    echo "=== Deep Diagnostic Scanner ===\n";
-    echo "Current root: " . __DIR__ . "\n\n";
+    echo "=== Deep Diagnostic & Recovery Scanner ===\n\n";
 
-    echo "1. Scanning /home/u362580417/domains/rudraspirit.com/ contents:\n";
-    $domain_items = glob('/home/u362580417/domains/rudraspirit.com/{,.}*', GLOB_BRACE);
-    if ( $domain_items ) {
-        foreach ( $domain_items as $item ) {
-            if ( basename($item) != '.' && basename($item) != '..' ) {
-                echo "   -> " . $item . ( is_dir($item) ? " (DIR)" : " (" . filesize($item) . " bytes)" ) . "\n";
-            }
+    echo "1. Checking env.backup and cutover.sh:\n";
+    foreach ( ['/home/u362580417/env.backup', '/home/u362580417/cutover.sh', '/home/u362580417/clone_db.php'] as $f ) {
+        if ( file_exists($f) ) {
+            echo "--- $f (" . filesize($f) . " bytes) ---\n";
+            echo file_get_contents($f) . "\n\n";
         }
     }
 
-    echo "\n2. Scanning /home/u362580417/ contents:\n";
-    $home_items = glob('/home/u362580417/{,.}*', GLOB_BRACE);
-    if ( $home_items ) {
-        foreach ( $home_items as $item ) {
-            if ( basename($item) != '.' && basename($item) != '..' ) {
-                echo "   -> " . $item . ( is_dir($item) ? " (DIR)" : " (" . filesize($item) . " bytes)" ) . "\n";
-            }
+    echo "2. Scanning /home/u362580417/.dbdumps/ contents:\n";
+    $dumps = glob('/home/u362580417/.dbdumps/*');
+    if ( $dumps ) {
+        foreach ( $dumps as $d ) {
+            echo "   -> $d (" . filesize($d) . " bytes - " . date("Y-m-d H:i:s", filemtime($d)) . ")\n";
         }
-    }
-
-    echo "\n3. Searching across /home/u362580417 for ANY wp-config* or wp-load.php files (up to 4 levels deep):\n";
-    $search_patterns = [
-        '/home/u362580417/wp-config*.php',
-        '/home/u362580417/*/wp-config*.php',
-        '/home/u362580417/*/*/wp-config*.php',
-        '/home/u362580417/*/*/*/wp-config*.php',
-        '/home/u362580417/*/*/*/*/wp-config*.php',
-        '/home/u362580417/*/*/wp-load.php',
-        '/home/u362580417/*/*/*/wp-load.php',
-        '/home/u362580417/*/*/*/*/wp-load.php',
-    ];
-    $found_configs = [];
-    foreach ( $search_patterns as $pat ) {
-        $matches = glob($pat);
-        if ( $matches ) {
-            foreach ( $matches as $m ) {
-                $found_configs[] = $m;
-            }
-        }
-    }
-    $found_configs = array_unique($found_configs);
-    if ( empty($found_configs) ) {
-        echo "   No wp-config.php or wp-load.php found in those levels.\n";
     } else {
-        foreach ( $found_configs as $fc ) {
-            echo "   FOUND: " . $fc . " (" . filesize($fc) . " bytes)\n";
-            if ( strpos(basename($fc), 'wp-config') !== false && filesize($fc) > 500 ) {
-                $content = file_get_contents($fc);
-                if ( strpos($content, 'u362580417') !== false || strpos($content, 'DB_NAME') !== false ) {
-                    preg_match('/define\(\s*[\'"]DB_NAME[\'"]\s*,\s*[\'"]([^\'"]+)[\'"]/', $content, $m_name);
-                    preg_match('/define\(\s*[\'"]DB_USER[\'"]\s*,\s*[\'"]([^\'"]+)[\'"]/', $content, $m_user);
-                    echo "      [DB Check] DB_NAME: " . ($m_name[1] ?? 'unknown') . " | DB_USER: " . ($m_user[1] ?? 'unknown') . "\n";
+        echo "   No files found in .dbdumps\n";
+    }
+
+    echo "\n3. Searching for any reference to 'rudraspirit' DB credentials across /home/u362580417/ (sh files, backup files, sql headers):\n";
+    $search_files = array_merge(
+        glob('/home/u362580417/*.{sh,php,sql,txt,env,backup}', GLOB_BRACE),
+        glob('/home/u362580417/.*.{sh,php,sql,txt,env,backup}', GLOB_BRACE),
+        glob('/home/u362580417/domains/*.{sh,php,sql,txt,env,backup}', GLOB_BRACE),
+        glob('/home/u362580417/domains/rudraspirit.com/*.{sh,php,sql,txt,env,backup}', GLOB_BRACE)
+    );
+    foreach ( $search_files as $sf ) {
+        if ( is_file($sf) && filesize($sf) < 1000000 && $sf != __FILE__ ) {
+            $txt = file_get_contents($sf);
+            if ( stripos($txt, 'rudra') !== false || stripos($txt, 'DB_USER') !== false || stripos($txt, 'u362580417_') !== false ) {
+                echo "   Found match in: $sf\n";
+                // Print relevant lines without printing whole massive dumps
+                $lines = explode("\n", $txt);
+                foreach ( $lines as $line ) {
+                    if ( stripos($line, 'u362580417_') !== false || stripos($line, 'rudra') !== false || stripos($line, 'DB_') !== false || stripos($line, 'password') !== false ) {
+                        echo "      -> " . trim($line) . "\n";
+                    }
                 }
             }
         }
     }
 
-    echo "\n4. Checking /home/u362580417/deploy-backups latest snapshot files:\n";
-    $latest_bk = '/home/u362580417/deploy-backups/20260715-140336';
-    if ( is_dir($latest_bk) ) {
-        $bk_files = glob("$latest_bk/*");
-        foreach ( $bk_files as $bf ) {
-            echo "   -> $bf (" . filesize($bf) . " bytes)\n";
-        }
+    echo "\n4. Checking if WordPress core exists inside /app/public/:\n";
+    $core_files = ['wp-load.php', 'wp-settings.php', 'wp-blog-header.php', 'wp-admin/index.php', 'wp-includes/version.php'];
+    foreach ( $core_files as $cf ) {
+        $p = __DIR__ . '/app/public/' . $cf;
+        echo "   app/public/$cf -> " . ( file_exists($p) ? "EXISTS" : "MISSING!" ) . "\n";
     }
 
-    echo "====================================\n";
+    echo "========================================\n";
     exit;
 }
 
