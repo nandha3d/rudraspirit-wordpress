@@ -1,70 +1,36 @@
 <?php
 /**
- * Root index.php bridge and Auto-Recovery Engine for Hostinger Git deployment.
- * Auto-restores WordPress core files and production database credentials if Hostinger Git wiped them.
+ * Root index.php bridge, Auto-Recovery Engine & Live Database Connector for Hostinger Git deployment.
  */
+
+error_reporting( E_ALL );
+ini_set( 'display_errors', '1' );
 
 $app_public = __DIR__ . '/app/public';
 
 // -----------------------------------------------------------------------------
-// 1. AUTO-RESTORE WORDPRESS CORE IF MISSING (wp-load.php, wp-admin, wp-includes)
+// 1. AUTO-RESTORE WORDPRESS CORE IF MISSING
 // -----------------------------------------------------------------------------
 if ( ! file_exists( $app_public . '/wp-load.php' ) || ! is_dir( $app_public . '/wp-includes' ) || ! is_dir( $app_public . '/wp-admin' ) ) {
     if ( ! is_dir( $app_public ) ) {
         @mkdir( $app_public, 0755, true );
     }
 
-    // Try restoring from shivarudraksha.in or wildlifeleather.in
     $sources = [
         '/home/u362580417/domains/shivarudraksha.in/public_html',
         '/home/u362580417/domains/wildlifeleather.in/public_html',
         '/home/u362580417/domains/animazon.in/public_html/shivarudraksha'
     ];
 
-    $restored_source = false;
     foreach ( $sources as $src ) {
         if ( file_exists( $src . '/wp-load.php' ) && is_dir( $src . '/wp-includes' ) ) {
-            // Use fast shell_exec copy first
             if ( function_exists( 'shell_exec' ) ) {
                 @shell_exec( "cp -r " . escapeshellarg( $src . '/wp-admin' ) . " " . escapeshellarg( $app_public . '/' ) . " 2>&1" );
                 @shell_exec( "cp -r " . escapeshellarg( $src . '/wp-includes' ) . " " . escapeshellarg( $app_public . '/' ) . " 2>&1" );
                 @shell_exec( "cp " . escapeshellarg( $src ) . "/wp-*.php " . escapeshellarg( $app_public . '/' ) . " 2>&1" );
                 @shell_exec( "cp " . escapeshellarg( $src . '/index.php' ) . " " . escapeshellarg( $app_public . '/index.php' ) . " 2>&1" );
-                @shell_exec( "cp " . escapeshellarg( $src . '/xmlrpc.php' ) . " " . escapeshellarg( $app_public . '/xmlrpc.php' ) . " 2>&1" );
             }
-
-            // PHP fallback recursive copy if shell_exec failed or was incomplete
-            if ( ! file_exists( $app_public . '/wp-load.php' ) ) {
-                if ( ! function_exists( 'vemus_copy_recursive' ) ) {
-                    function vemus_copy_recursive( $src_dir, $dst_dir ) {
-                        $dir = opendir( $src_dir );
-                        @mkdir( $dst_dir, 0755, true );
-                        while ( false !== ( $file = readdir( $dir ) ) ) {
-                            if ( ( $file != '.' ) && ( $file != '..' ) ) {
-                                if ( is_dir( $src_dir . '/' . $file ) ) {
-                                    vemus_copy_recursive( $src_dir . '/' . $file, $dst_dir . '/' . $file );
-                                } else {
-                                    copy( $src_dir . '/' . $file, $dst_dir . '/' . $file );
-                                }
-                            }
-                        }
-                        closedir( $dir );
-                    }
-                }
-                vemus_copy_recursive( $src . '/wp-admin', $app_public . '/wp-admin' );
-                vemus_copy_recursive( $src . '/wp-includes', $app_public . '/wp-includes' );
-                foreach ( glob( $src . '/wp-*.php' ) as $f ) {
-                    if ( basename( $f ) !== 'wp-config.php' ) {
-                        copy( $f, $app_public . '/' . basename( $f ) );
-                    }
-                }
-                if ( file_exists( $src . '/index.php' ) ) {
-                    copy( $src . '/index.php', $app_public . '/index.php' );
-                }
-            }
-
             if ( file_exists( $app_public . '/wp-load.php' ) ) {
-                $restored_source = $src;
                 break;
             }
         }
@@ -72,26 +38,16 @@ if ( ! file_exists( $app_public . '/wp-load.php' ) || ! is_dir( $app_public . '/
 }
 
 // -----------------------------------------------------------------------------
-// 2. AUTO-CONFIGURE PRODUCTION DATABASE CREDENTIALS FOR RUDRASPIRIT.COM
+// 2. ENFORCE RUDRASPIRIT.COM PRODUCTION DATABASE CREDENTIALS IN WP-CONFIG.PHP
 // -----------------------------------------------------------------------------
 $wp_config_path = $app_public . '/wp-config.php';
-$needs_db_fix = false;
+$current_config = file_exists( $wp_config_path ) ? @file_get_contents( $wp_config_path ) : '';
 
-if ( ! file_exists( $wp_config_path ) ) {
-    $needs_db_fix = true;
-} else {
-    $current_config = @file_get_contents( $wp_config_path );
-    if ( strpos( $current_config, "'local'" ) !== false || strpos( $current_config, '"local"' ) !== false || strpos( $current_config, "'root'" ) !== false ) {
-        $needs_db_fix = true;
-    }
-}
-
-if ( $needs_db_fix && ( file_exists( '/home/u362580417/env.backup' ) || strpos( __DIR__, 'u362580417' ) !== false ) ) {
+if ( strpos( $current_config, 'u362580417_MOrXI' ) === false ) {
     $prod_wp_config = <<<PHP
 <?php
 /**
  * Production Hostinger wp-config.php for Rudra Spirit (rudraspirit.com)
- * Automatically restored by deployment bridge.
  */
 
 define( 'DB_NAME', 'u362580417_MOrXI' );
@@ -103,7 +59,11 @@ define( 'DB_COLLATE', '' );
 
 \$table_prefix = 'wp_';
 
-define( 'WP_DEBUG', false );
+define( 'WP_DEBUG', true );
+define( 'WP_DEBUG_LOG', true );
+define( 'WP_DEBUG_DISPLAY', true );
+@ini_set( 'display_errors', '1' );
+
 define( 'WP_ENVIRONMENT_TYPE', 'production' );
 
 /* That's all, stop editing! Happy publishing. */
@@ -117,26 +77,83 @@ PHP;
 }
 
 // -----------------------------------------------------------------------------
-// 3. DIAGNOSTIC OUTPUT MODE (if requested via ?vemus_debug=1)
+// 3. DIAGNOSTIC OUTPUT & LIVE DATABASE VERIFICATION MODE (?vemus_debug=1)
 // -----------------------------------------------------------------------------
 if ( isset( $_GET['vemus_debug'] ) && $_GET['vemus_debug'] === '1' ) {
     header( 'Content-Type: text/plain' );
-    echo "=== Auto-Recovery Status ===\n";
+    echo "=== Auto-Recovery & Database Status ===\n";
     echo "Target directory: " . $app_public . "\n";
-    echo "wp-load.php: " . ( file_exists( $app_public . '/wp-load.php' ) ? "EXISTS (" . filesize( $app_public . '/wp-load.php' ) . " bytes)" : "STILL MISSING!" ) . "\n";
-    echo "wp-admin/: " . ( is_dir( $app_public . '/wp-admin' ) ? "EXISTS (" . count( (array) glob( $app_public . '/wp-admin/*' ) ) . " items)" : "STILL MISSING!" ) . "\n";
-    echo "wp-includes/: " . ( is_dir( $app_public . '/wp-includes' ) ? "EXISTS (" . count( (array) glob( $app_public . '/wp-includes/*' ) ) . " items)" : "STILL MISSING!" ) . "\n";
+    echo "wp-load.php: " . ( file_exists( $app_public . '/wp-load.php' ) ? "EXISTS" : "MISSING" ) . "\n";
     
-    if ( file_exists( $wp_config_path ) ) {
-        $cfg = file_get_contents( $wp_config_path );
-        preg_match( '/define\(\s*[\'"]DB_NAME[\'"]\s*,\s*[\'"]([^\'"]+)[\'"]/', $cfg, $mn );
-        preg_match( '/define\(\s*[\'"]DB_USER[\'"]\s*,\s*[\'"]([^\'"]+)[\'"]/', $cfg, $mu );
-        echo "wp-config.php DB_NAME: " . ( $mn[1] ?? 'unknown' ) . "\n";
-        echo "wp-config.php DB_USER: " . ( $mu[1] ?? 'unknown' ) . "\n";
+    $cfg = file_exists( $wp_config_path ) ? file_get_contents( $wp_config_path ) : '';
+    preg_match( '/define\(\s*[\'"]DB_NAME[\'"]\s*,\s*[\'"]([^\'"]+)[\'"]/', $cfg, $mn );
+    preg_match( '/define\(\s*[\'"]DB_USER[\'"]\s*,\s*[\'"]([^\'"]+)[\'"]/', $cfg, $mu );
+    preg_match( '/define\(\s*[\'"]DB_PASSWORD[\'"]\s*,\s*[\'"]([^\'"]+)[\'"]/', $cfg, $mp );
+    
+    $db_name = $mn[1] ?? 'unknown';
+    $db_user = $mu[1] ?? 'unknown';
+    $db_pass = $mp[1] ?? 'unknown';
+    echo "Configured DB_NAME: " . $db_name . "\n";
+    echo "Configured DB_USER: " . $db_user . "\n\n";
+
+    echo "Testing direct MySQL connection to configured database...\n";
+    $conn = @mysqli_connect( 'localhost', $db_user, $db_pass, $db_name );
+    if ( ! $conn ) {
+        echo "--> MYSQL CONNECTION FAILED: " . mysqli_connect_error() . "\n";
+        
+        // Try testing connection with shivarudraksha credentials or other known databases just in case
+        echo "\nTesting alternative databases on server:\n";
+        $alt_dbs = [
+            ['u362580417_VR4qn', 'Animazon@Erode11', 'u362580417_MOrXI'],
+            ['u362580417_Vaf49', 'password_unknown', 'u362580417_cRhnL'],
+            ['u362580417_WT0W0', 'password_unknown', 'u362580417_iik8p'],
+            ['u362580417_yUI1B', 'password_unknown', 'u362580417_iVXDS'],
+        ];
+        foreach ( $alt_dbs as $adb ) {
+            $c = @mysqli_connect( 'localhost', $adb[0], $adb[1], $adb[2] );
+            echo "   Try DB [" . $adb[2] . "] with user [" . $adb[0] . "]: " . ( $c ? "SUCCESS!" : "FAILED (" . mysqli_connect_error() . ")" ) . "\n";
+            if ( $c ) {
+                $conn = $c;
+                break;
+            }
+        }
     } else {
-        echo "wp-config.php: MISSING!\n";
+        echo "--> MYSQL CONNECTION SUCCESSFUL!\n";
     }
-    echo "============================\n";
+
+    if ( $conn ) {
+        echo "\nQuerying wp_options from connected database:\n";
+        $res = mysqli_query( $conn, "SELECT option_name, option_value FROM wp_options WHERE option_name IN ('siteurl', 'home', 'template', 'stylesheet', 'active_plugins') OR option_name LIKE 'template%' LIMIT 10" );
+        if ( $res ) {
+            while ( $row = mysqli_fetch_assoc( $res ) ) {
+                echo "   [" . $row['option_name'] . "] => " . substr( $row['option_value'], 0, 150 ) . "\n";
+            }
+        } else {
+            echo "   Query error: " . mysqli_error( $conn ) . "\n";
+            echo "   Checking existing tables:\n";
+            $tres = mysqli_query( $conn, "SHOW TABLES" );
+            if ( $tres ) {
+                while ( $trow = mysqli_fetch_row( $tres ) ) {
+                    echo "      Table: " . $trow[0] . "\n";
+                }
+            }
+        }
+        mysqli_close( $conn );
+    }
+
+    echo "\nTrying to load WordPress environment (wp-load.php) directly:\n";
+    try {
+        chdir( $app_public );
+        require_once $app_public . '/wp-load.php';
+        echo "--> wp-load.php loaded successfully without errors!\n";
+        echo "--> site_url(): " . ( function_exists( 'site_url' ) ? site_url() : 'N/A' ) . "\n";
+        echo "--> home_url(): " . ( function_exists( 'home_url' ) ? home_url() : 'N/A' ) . "\n";
+        echo "--> current_theme: " . ( function_exists( 'wp_get_theme' ) ? wp_get_theme()->get( 'Name' ) : 'N/A' ) . "\n";
+    } catch ( Throwable $e ) {
+        echo "--> EXCEPTION loading WordPress: " . $e->getMessage() . " in " . $e->getFile() . " on line " . $e->getLine() . "\n";
+    }
+
+    echo "=====================================\n";
     exit;
 }
 
@@ -144,7 +161,6 @@ if ( isset( $_GET['vemus_debug'] ) && $_GET['vemus_debug'] === '1' ) {
 // 4. ROUTE CLEANLY TO WORDPRESS APPLICATION
 // -----------------------------------------------------------------------------
 if ( file_exists( $app_public . '/index.php' ) && file_exists( $app_public . '/wp-load.php' ) ) {
-    // Ensure current working directory is app/public when loading WordPress
     chdir( $app_public );
     require $app_public . '/index.php';
 } else {
