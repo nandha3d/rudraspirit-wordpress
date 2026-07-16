@@ -312,3 +312,15 @@ add_filter( 'theme_mod_tf_delivery_text', function( $val ) {
     return $val;
 });
 
+/**
+ * Remove all product card badges (IN STOCK, 35% OFF, TRENDING, NEW) over thumbnails in Shop and Related Products
+ */
+add_filter( 'theme_mod_show_badges', '__return_zero' );
+add_filter( 'theme_mod_pc_badges', '__return_zero' );
+add_filter( 'theme_mod_badges_stock', '__return_zero' );
+add_filter( 'theme_mod_badges_sale', '__return_zero' );
+add_filter( 'theme_mod_badges_trending', '__return_zero' );
+add_filter( 'theme_mod_badges_new', '__return_zero' );
+add_filter( 'theme_mod_badges_order', '__return_zero' );
+add_filter( 'theme_mod_badges_custom', '__return_zero' );
+

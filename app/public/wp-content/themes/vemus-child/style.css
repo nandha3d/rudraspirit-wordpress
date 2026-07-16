@@ -1644,4 +1644,22 @@ html body [data-elementor-type="tf_header_footer"] a:hover {
 .tf-product-info-list li:contains("30-day") {
     display: none !important;
 }
+
+/* ==========================================================================
+   8. REMOVE ALL BADGES (IN STOCK, SALE %, TRENDING) OVER PRODUCT CARDS
+   ========================================================================== */
+.badge-box,
+.card-product .badge-box,
+.card_product--V01 .badge-box,
+.card_product--V01 .card_product-wrapper .badge-box,
+.products .product .badge-box,
+.woocommerce ul.products li.product .badge-box,
+.tf-shop-control + .products .badge-box,
+.swiper-slide .card_product--V01 .badge-box,
+.badge-item {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+}
 

@@ -435,7 +435,7 @@ function themesflat_customize_default($key) {
 		'btn_pc_wishlist' => 0,
 		'btn_pc_compare' => 0,
 		'btn_pc_quickview' => 1,
-		'pc_badges' => 1,
+		'pc_badges' => 0,
 
 
 		'show_navigation_bar' => 1,
@@ -546,25 +546,25 @@ function themesflat_customize_default($key) {
 		'out_stock_form' => '',
 
 		
-		'show_badges' => 1,
+		'show_badges' => 0,
 
 		// badges
-		'badges_stock' => 1,
+		'badges_stock' => 0,
 		'badges_stock_color' => '',
 		'badges_stock_background_color' => '',		
-		'badges_trending' => 1,
+		'badges_trending' => 0,
 		'badges_trending_color' => '',
 		'badges_trending_background_color' => '',	
-		'badges_custom' => 1,
+		'badges_custom' => 0,
 		'badges_custom_color' => '',
 		'badges_custom_background_color' => '',	
-		'badges_sale' => 1,
+		'badges_sale' => 0,
 		'badges_sale_color' => '',
 		'badges_sale_background_color' => '',	
-		'badges_new' => 1,
+		'badges_new' => 0,
 		'badges_new_color' => '',
 		'badges_new_background_color' => '',	
-		'badges_order' => 1,
+		'badges_order' => 0,
 		'badges_order_color' => '',
 		'badges_order_background_color' => '',
 		
