@@ -130,16 +130,18 @@ class TF_MegaMenu_Walker extends Walker_Nav_Menu {
 
                 $output .= '<div class="sub-menu mega-menu mega-product ' . esc_attr( $width_class ) . '"' . $inline_style . '>';
 
-                if ( ! empty( $item->mega_menu_block_id ) ) {                              
-                    $document = Elementor\Plugin::$instance->documents->get_doc_for_frontend( $item->mega_menu_block_id );
-                    if ( ! $document || ! $document->is_built_with_elementor() ) {
-                        $content = apply_filters( 'the_content', get_post_field( 'post_content', $item->mega_menu_block_id ) );           
-                    } else {
-                        $content = "";
-                        if ( class_exists( "\\Elementor\\Plugin" ) ) {
-                            $pluginElementor  = \Elementor\Plugin::instance();
-                            $content = $pluginElementor->frontend->get_builder_content_for_display( $item->mega_menu_block_id );  
+                if ( ! empty( $item->mega_menu_block_id ) ) {
+                    $content = '';
+                    if ( class_exists( '\Elementor\Plugin' ) && \Elementor\Plugin::$instance && isset( \Elementor\Plugin::$instance->documents ) ) {
+                        $document = \Elementor\Plugin::$instance->documents->get_doc_for_frontend( $item->mega_menu_block_id );
+                        if ( ! $document || ! $document->is_built_with_elementor() ) {
+                            $content = apply_filters( 'the_content', get_post_field( 'post_content', $item->mega_menu_block_id ) );
+                        } else {
+                            $pluginElementor = \Elementor\Plugin::instance();
+                            $content = $pluginElementor->frontend->get_builder_content_for_display( $item->mega_menu_block_id );
                         }
+                    } else {
+                        $content = apply_filters( 'the_content', get_post_field( 'post_content', $item->mega_menu_block_id ) );
                     }
                     $output .= $content;
                 }
