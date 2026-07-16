@@ -617,7 +617,7 @@ if ( ! class_exists( 'Vemus_Rudraksha_Data' ) ) {
 
             $result = array(
                 'id'              => 0,
-                'url'             => home_url( '/shop/?s=' . $mukhi . '+Mukhi+Rudraksha' ),
+                'url'             => home_url( '/shop/?s=' . $mukhi . '+Mukhi' ),
                 'price_html'      => '<span class="rudraksha-price-tag">Authentic Vedic Consecrated Bead</span>',
                 'image_url'       => $data['image_fallback'],
                 'is_real_product' => false,
@@ -625,16 +625,46 @@ if ( ! class_exists( 'Vemus_Rudraksha_Data' ) ) {
             );
 
             if ( function_exists( 'wc_get_products' ) ) {
-                // Fetch all published products to guarantee exact Mukhi match via get_mukhi_by_page_id
                 $products = wc_get_products( array(
                     'status' => 'publish',
                     'limit'  => -1,
                 ) );
 
                 if ( ! empty( $products ) ) {
+                    $words_map = array(
+                        1  => array('1', 'one', 'ek'),
+                        2  => array('2', 'two', 'do'),
+                        3  => array('3', 'three', 'teen'),
+                        4  => array('4', 'four', 'chaar', 'char'),
+                        5  => array('5', 'five', 'panch'),
+                        6  => array('6', 'six', 'cheh', 'chah'),
+                        7  => array('7', 'seven', 'saat', 'sat'),
+                        8  => array('8', 'eight', 'aath', 'ath'),
+                        9  => array('9', 'nine', 'nau'),
+                        10 => array('10', 'ten', 'das'),
+                        11 => array('11', 'eleven', 'gyarah', 'gyara'),
+                        12 => array('12', 'twelve', 'barah', 'bara'),
+                        13 => array('13', 'thirteen', 'terah', 'tera'),
+                        14 => array('14', 'fourteen', 'chaudah', 'chauda'),
+                    );
+                    $target_words = isset( $words_map[ $mukhi ] ) ? $words_map[ $mukhi ] : array( (string) $mukhi );
+
                     foreach ( $products as $product ) {
                         $matched_mukhi = self::get_mukhi_by_page_id( $product->get_id() );
-                        if ( $matched_mukhi === $mukhi ) {
+                        $is_match      = ( $matched_mukhi === $mukhi );
+
+                        if ( ! $is_match ) {
+                            $p_title = strtolower( $product->get_name() );
+                            $p_slug  = strtolower( $product->get_slug() );
+                            foreach ( $target_words as $w ) {
+                                if ( preg_match( '/\b' . $w . '\b.*mukhi|' . $w . '-mukhi/i', $p_title ) || preg_match( '/\b' . $w . '\b.*mukhi|' . $w . '-mukhi/i', $p_slug ) ) {
+                                    $is_match = true;
+                                    break;
+                                }
+                            }
+                        }
+
+                        if ( $is_match ) {
                             $result['id']              = $product->get_id();
                             $result['url']             = $product->get_permalink();
                             $result['price_html']      = $product->get_price_html() ? $product->get_price_html() : '<span class="rudraksha-price-tag">Authentic Vedic Consecrated Bead</span>';
@@ -651,6 +681,10 @@ if ( ! class_exists( 'Vemus_Rudraksha_Data' ) ) {
                         }
                     }
                 }
+            }
+
+            if ( ! $result['is_real_product'] ) {
+                $result['url'] = home_url( '/?post_type=product&s=' . $mukhi . '+Mukhi' );
             }
 
             return $result;

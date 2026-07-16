@@ -252,48 +252,109 @@ function vemus_child_rudraksha_content_override( $content ) {
 }
 
 /**
- * Automatically sort Rudraksha products numerically by Mukhi (1 Mukhi, 2 Mukhi, ..., 21 Mukhi, Gauri Shankar, Trijuti)
+ * Clean Single Product Page: Remove bead information tabs, accordions, and extra sections below the product card.
+ * Keep ONLY the main product card exactly as requested by the user.
  */
+add_action( 'woocommerce_before_single_product', 'vemus_child_clean_single_product_page', 5 );
+function vemus_child_clean_single_product_page() {
+    remove_action( 'woocommerce_after_single_product_summary', 'woocommerce_output_product_data_tabs', 10 );
+    remove_action( 'woocommerce_after_single_product_summary', 'woocommerce_upsell_display', 15 );
+    remove_action( 'woocommerce_after_single_product_summary', 'woocommerce_output_related_products', 20 );
+    
+    // Empty product tabs array so Description / Additional info / Reviews tabs don't render anywhere below
+    add_filter( 'woocommerce_product_tabs', '__return_empty_array', 99 );
+}
+
+/**
+ * Automatically sort Rudraksha products numerically by Mukhi across all queries (1 Mukhi, 2 Mukhi, ..., 14 Mukhi)
+ */
+add_action( 'wp_loaded', 'vemus_child_sync_product_menu_orders' );
+function vemus_child_sync_product_menu_orders() {
+    if ( ! function_exists( 'wc_get_products' ) || ! class_exists( 'Vemus_Rudraksha_Data' ) ) {
+        return;
+    }
+    if ( get_transient( 'vemus_rudraksha_menu_order_synced_v3' ) ) {
+        return;
+    }
+    set_transient( 'vemus_rudraksha_menu_order_synced_v3', true, 12 * HOUR_IN_SECONDS );
+
+    $products = wc_get_products( array(
+        'status' => 'publish',
+        'limit'  => -1,
+    ) );
+
+    if ( ! empty( $products ) ) {
+        foreach ( $products as $product ) {
+            $mukhi = Vemus_Rudraksha_Data::get_mukhi_by_page_id( $product->get_id() );
+            if ( $mukhi > 0 && $product->get_menu_order() !== $mukhi ) {
+                $product->set_menu_order( $mukhi );
+                $product->save();
+            } elseif ( $mukhi === 0 && $product->get_menu_order() < 50 ) {
+                $product->set_menu_order( 50 );
+                $product->save();
+            }
+        }
+    }
+}
+
+add_filter( 'woocommerce_get_catalog_ordering_args', 'vemus_child_catalog_ordering_args', 20 );
+function vemus_child_catalog_ordering_args( $args ) {
+    $args['orderby'] = 'menu_order title';
+    $args['order']   = 'ASC';
+    return $args;
+}
+
+add_filter( 'woocommerce_default_catalog_orderby', function() {
+    return 'menu_order';
+}, 20 );
+
+add_action( 'pre_get_posts', 'vemus_child_order_products_query', 20 );
+function vemus_child_order_products_query( $query ) {
+    if ( ! is_admin() && $query->is_main_query() && ( $query->get( 'post_type' ) === 'product' || is_shop() || is_product_category() || is_product_tag() ) ) {
+        $query->set( 'orderby', 'menu_order title' );
+        $query->set( 'order', 'ASC' );
+    }
+}
+
 add_filter( 'the_posts', 'vemus_child_sort_rudraksha_products_by_mukhi', 20, 2 );
 function vemus_child_sort_rudraksha_products_by_mukhi( $posts, $query ) {
     if ( is_admin() && ! wp_doing_ajax() ) {
         return $posts;
     }
-    // Only sort queries returning products
-    if ( empty( $posts ) || ! is_array( $posts ) ) {
+    if ( empty( $posts ) || ! is_array( $posts ) || ! class_exists( 'Vemus_Rudraksha_Data' ) ) {
         return $posts;
     }
     
-    // Check if at least one post is a product
     $has_product = false;
     foreach ( $posts as $p ) {
-        if ( isset( $p->post_type ) && 'product' === $p->post_type ) {
+        $post_type = is_object( $p ) && isset( $p->post_type ) ? $p->post_type : get_post_type( $p );
+        if ( 'product' === $post_type ) {
             $has_product = true;
             break;
         }
     }
-    if ( ! $has_product || ! class_exists( 'Vemus_Rudraksha_Data' ) ) {
+    if ( ! $has_product ) {
         return $posts;
     }
 
     usort( $posts, function( $a, $b ) {
-        $mukhi_a = Vemus_Rudraksha_Data::get_mukhi_by_page_id( $a->ID );
-        $mukhi_b = Vemus_Rudraksha_Data::get_mukhi_by_page_id( $b->ID );
+        $id_a    = is_object( $a ) ? $a->ID : intval( $a );
+        $id_b    = is_object( $b ) ? $b->ID : intval( $b );
+        $mukhi_a = Vemus_Rudraksha_Data::get_mukhi_by_page_id( $id_a );
+        $mukhi_b = Vemus_Rudraksha_Data::get_mukhi_by_page_id( $id_b );
 
-        // If both are recognized Rudrakshas (1 to 23)
         if ( $mukhi_a > 0 && $mukhi_b > 0 ) {
             return $mukhi_a - $mukhi_b;
         }
-        // If only A is a Rudraksha, put it first
         if ( $mukhi_a > 0 && $mukhi_b === 0 ) {
             return -1;
         }
-        // If only B is a Rudraksha, put it first
         if ( $mukhi_a === 0 && $mukhi_b > 0 ) {
             return 1;
         }
-        // Otherwise maintain natural menu order / ID
-        return $a->menu_order - $b->menu_order;
+        $order_a = is_object( $a ) && isset( $a->menu_order ) ? $a->menu_order : 50;
+        $order_b = is_object( $b ) && isset( $b->menu_order ) ? $b->menu_order : 50;
+        return $order_a - $order_b;
     });
 
     return $posts;

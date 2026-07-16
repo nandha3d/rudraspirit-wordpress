@@ -1741,4 +1741,17 @@ html body [data-elementor-type="tf_header_footer"] a:hover {
 .wcboost-variation-swatches--rounded .wcboost-variation-swatches__item img {
     border-radius: 4px !important;
 }
+
+/* ====================================================================
+ * Clean Single Product Page: Hide all tabs, accordion descriptions, and extra bead info below product card
+ * Keeps ONLY the main product card exactly as requested by user
+ * ==================================================================== */
+.single-product .woocommerce-tabs,
+.single-product .tab-vertical-product-desc,
+.single-product .accordion-product-desc,
+.single-product .wd-product-descriptions,
+.single-product #tab-description,
+.single-product #tab-additional_information {
+    display: none !important;
+}
 
