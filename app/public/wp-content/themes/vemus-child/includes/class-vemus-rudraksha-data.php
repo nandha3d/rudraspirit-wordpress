@@ -625,27 +625,16 @@ if ( ! class_exists( 'Vemus_Rudraksha_Data' ) ) {
             );
 
             if ( function_exists( 'wc_get_products' ) ) {
-                // Search for product matching "X Mukhi" or "X-Mukhi"
+                // Fetch all published products to guarantee exact Mukhi match via get_mukhi_by_page_id
                 $products = wc_get_products( array(
                     'status' => 'publish',
-                    'limit'  => 5,
-                    's'      => $mukhi . ' Mukhi',
+                    'limit'  => -1,
                 ) );
 
-                if ( empty( $products ) ) {
-                    $products = wc_get_products( array(
-                        'status' => 'publish',
-                        'limit'  => 5,
-                        's'      => $mukhi . '-Mukhi',
-                    ) );
-                }
-
                 if ( ! empty( $products ) ) {
-                    // Pick the best match
                     foreach ( $products as $product ) {
-                        $p_title = $product->get_name();
-                        // Verify exact mukhi match to avoid 1 matching 10, 11, 12, 13, 14
-                        if ( preg_match( '/\b' . preg_quote( $mukhi, '/' ) . '\b[- ]?Mukhi/i', $p_title ) ) {
+                        $matched_mukhi = self::get_mukhi_by_page_id( $product->get_id() );
+                        if ( $matched_mukhi === $mukhi ) {
                             $result['id']              = $product->get_id();
                             $result['url']             = $product->get_permalink();
                             $result['price_html']      = $product->get_price_html() ? $product->get_price_html() : '<span class="rudraksha-price-tag">Authentic Vedic Consecrated Bead</span>';
@@ -720,7 +709,7 @@ if ( ! class_exists( 'Vemus_Rudraksha_Data' ) ) {
             if ( $post && isset( $post->post_title ) && ! empty( $post->post_title ) ) {
                 $search_strings[] = strtolower( $post->post_title );
             }
-            if ( isset( $_SERVER['REQUEST_URI'] ) ) {
+            if ( isset( $_SERVER['REQUEST_URI'] ) && $page_id <= 0 ) {
                 // Exclude /shop/, /cart/, /checkout/, /wp-admin/, post_type=product from general URL matching
                 $uri = strtolower( $_SERVER['REQUEST_URI'] );
                 if ( strpos( $uri, '/shop/' ) === false && strpos( $uri, '/cart/' ) === false && strpos( $uri, '/checkout/' ) === false && strpos( $uri, '/wp-admin/' ) === false && strpos( $uri, 'post_type=product' ) === false ) {
@@ -728,7 +717,7 @@ if ( ! class_exists( 'Vemus_Rudraksha_Data' ) ) {
                 }
             }
 
-            // Map of patterns for each Mukhi 1 to 14
+            // Map of patterns for each Mukhi 1 to 21 + Gauri Shankar + Trijuti
             $patterns = array(
                 1  => '/\b(1|one|ek)\b.*mukhi|one-mukhi|1-mukhi|ek-mukhi/i',
                 2  => '/\b(2|two|do)\b.*mukhi|two-mukhi|2-mukhi|do-mukhi/i',
@@ -744,6 +733,15 @@ if ( ! class_exists( 'Vemus_Rudraksha_Data' ) ) {
                 12 => '/\b(12|twelve|barah|bara)\b.*mukhi|twelve-mukhi|12-mukhi|barah-mukhi/i',
                 13 => '/\b(13|thirteen|terah|tera)\b.*mukhi|thirteen-mukhi|13-mukhi|terah-mukhi/i',
                 14 => '/\b(14|fourteen|chaudah|chauda)\b.*mukhi|fourteen-mukhi|14-mukhi|chaudah-mukhi/i',
+                15 => '/\b(15|fifteen|pandrah)\b.*mukhi|fifteen-mukhi|15-mukhi/i',
+                16 => '/\b(16|sixteen|solah)\b.*mukhi|sixteen-mukhi|16-mukhi/i',
+                17 => '/\b(17|seventeen|satrah)\b.*mukhi|seventeen-mukhi|17-mukhi/i',
+                18 => '/\b(18|eighteen|atharah)\b.*mukhi|eighteen-mukhi|18-mukhi/i',
+                19 => '/\b(19|nineteen|unnis)\b.*mukhi|nineteen-mukhi|19-mukhi/i',
+                20 => '/\b(20|twenty|bis)\b.*mukhi|twenty-mukhi|20-mukhi/i',
+                21 => '/\b(21|twenty-one|ikkis)\b.*mukhi|twenty-one-mukhi|21-mukhi/i',
+                22 => '/gauri[- ]?shankar/i',
+                23 => '/trijuti/i',
             );
 
             foreach ( $search_strings as $text ) {

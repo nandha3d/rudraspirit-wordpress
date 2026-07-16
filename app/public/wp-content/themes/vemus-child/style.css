@@ -1615,4 +1615,33 @@ html body [data-elementor-type="tf_header_footer"] a:hover {
         font-size: 0.95rem;
     }
 }
+
+/* ==========================================================================
+   7. SINGLE PRODUCT & DETAILS PAGE TOP MARGIN & SPACING IMPROVEMENTS
+   ========================================================================== */
+
+/* Increase top margin on single product page before product details */
+.single-product .section-single-product,
+.single-product .tf-main-product,
+.single-product .woocommerce-notices-wrapper + .product,
+.single-product #content .product {
+    margin-top: 45px !important;
+    padding-top: 25px !important;
+}
+
+/* Increase top and bottom spacing around the product extra info / delivery icons */
+.tf-product-info-list,
+.woocommerce-product-details__short-description + .tf-product-info-list,
+.product-extra-info-list {
+    margin-top: 35px !important;
+    margin-bottom: 45px !important;
+    padding-top: 20px !important;
+    border-top: 1px solid rgba(212, 175, 55, 0.2) !important;
+}
+
+/* Ensure no crossed-out returns badge is visible if output by cached HTML */
+.tf-product-info-list h6:contains("30-day"),
+.tf-product-info-list li:contains("30-day") {
+    display: none !important;
+}
 

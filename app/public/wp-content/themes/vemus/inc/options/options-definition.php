@@ -848,16 +848,16 @@ function themesflat_customize_default($key) {
 		'tf_trust_seal_items' => '',
 
 		'tf_delivery_info' => 1,
-		'tf_delivery_text' => 'Free shipping on order $200+',
+		'tf_delivery_text' => 'Free Insured Express Shipping Across India',
 		'tf_delivery_icon' => 'icon icon-box',
 
-		'tf_delivery_text2' => 'Free 30-day returns',
-		'tf_delivery_icon2' => 'icon icon-return',
+		'tf_delivery_text2' => '',
+		'tf_delivery_icon2' => '',
 
-		'tf_delivery_text3' => 'Interest monthly accepted',
+		'tf_delivery_text3' => 'Secure All-India & Global Payment Gateways',
 		'tf_delivery_icon3' => 'icon icon-credit-card',
 
-		'tf_delivery_text4' => 'Gift packaging available',
+		'tf_delivery_text4' => 'Sacred Altar Gift Packaging Included',
 		'tf_delivery_icon4' => 'icon icon-gift',
 
 		'tf_product_share' => 1,

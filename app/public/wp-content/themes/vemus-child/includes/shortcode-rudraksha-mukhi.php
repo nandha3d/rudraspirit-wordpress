@@ -322,7 +322,7 @@ if ( ! function_exists( 'vemus_rudraksha_mukhi_shortcode' ) ) {
                             <!-- Vedic Beej Mantra Card (Clean English) -->
                             <div class="mantra-display-card">
                                 <span class="mantra-label">Vedic Beej Mantra (Chant 108 Times)</span>
-                                <h2 class="english-mantra-title" x-text="currentData.mantra_english"></h2>
+                                <div class="english-mantra-title" style="font-size: 17px; font-weight: 600; color: #d68019; letter-spacing: 0.5px; margin-top: 6px;" x-text="currentData.mantra_english"></div>
                             </div>
 
                             <!-- Interactive 108 Counter -->
@@ -340,10 +340,13 @@ if ( ! function_exists( 'vemus_rudraksha_mukhi_shortcode' ) ) {
                                 </div>
 
                                 <div class="japa-controls">
-                                    <button type="button" class="japa-tap-btn tf-btn" @click="incrementJapa()">
-                                        <span>📿 Chant +1</span>
+                                    <button type="button" class="japa-tap-btn tf-btn" @click="toggleAutoJapa()" :style="japaIsRunning ? 'background: #2b2b2b; color: #fff;' : ''">
+                                        <span x-text="japaIsRunning ? '⏸ Pause Automatic Chanting' : (japaCount >= 108 ? '🔄 Restart 108 Chants' : '▶ Start Automatic Chanting (1 by 1)')"></span>
                                     </button>
-                                    <button type="button" class="japa-reset-btn" @click="resetJapa()" x-show="japaCount > 0">
+                                    <button type="button" class="japa-manual-tap tf-btn" style="background: transparent; border: 1px solid rgba(214, 128, 25, 0.4); color: inherit; font-size: 13px; padding: 6px 14px;" @click="incrementJapa()" x-show="!japaIsRunning && japaCount < 108">
+                                        <span>📿 Manual Tap +1</span>
+                                    </button>
+                                    <button type="button" class="japa-reset-btn" @click="resetJapa()" x-show="japaCount > 0 && !japaIsRunning">
                                         <span>Reset Counter</span>
                                     </button>
                                 </div>
@@ -391,6 +394,8 @@ if ( ! function_exists( 'vemus_rudraksha_mukhi_shortcode' ) ) {
                 activeTab: '<?php echo esc_js( $atts['initial_tab'] ); ?>',
                 japaCount: 0,
                 japaComplete: false,
+                japaIsRunning: false,
+                japaAutoTimer: null,
                 tabAutoTimer: null,
                 isPaused: false,
                 tabList: ['overview', 'benefits', 'ritual', 'mantra'],
@@ -423,23 +428,56 @@ if ( ! function_exists( 'vemus_rudraksha_mukhi_shortcode' ) ) {
                     this.isPaused = true; // Pause autoplay when user clicks a tab
                 },
 
+                toggleAutoJapa() {
+                    this.isPaused = true;
+                    if (this.japaIsRunning) {
+                        this.stopAutoJapa();
+                    } else {
+                        if (this.japaCount >= 108) {
+                            this.resetJapa();
+                        }
+                        this.japaIsRunning = true;
+                        this.incrementJapa();
+                        this.japaAutoTimer = setInterval(() => {
+                            if (this.japaCount < 108 && this.japaIsRunning) {
+                                this.incrementJapa();
+                            } else {
+                                this.stopAutoJapa();
+                            }
+                        }, 1200);
+                    }
+                },
+
+                stopAutoJapa() {
+                    this.japaIsRunning = false;
+                    if (this.japaAutoTimer) {
+                        clearInterval(this.japaAutoTimer);
+                        this.japaAutoTimer = null;
+                    }
+                },
+
                 incrementJapa() {
                     this.isPaused = true; // Pause tab autoplay during Japa chanting
                     if (this.japaCount < 108) {
                         this.japaCount++;
                         if (this.japaCount === 108) {
                             this.japaComplete = true;
+                            this.stopAutoJapa();
                         }
+                    } else {
+                        this.stopAutoJapa();
                     }
                 },
 
                 resetJapa() {
+                    this.stopAutoJapa();
                     this.japaCount = 0;
                     this.japaComplete = false;
                 },
 
                 switchMukhi(num) {
                     if (this.allMukhis[num]) {
+                        this.stopAutoJapa();
                         this.activeMukhi = num;
                         this.currentData = this.allMukhis[num];
                         if (this.allProducts && this.allProducts[num]) {

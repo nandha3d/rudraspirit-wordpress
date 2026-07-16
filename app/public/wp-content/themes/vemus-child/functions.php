@@ -200,9 +200,6 @@ function vemus_child_fix_single_product_wishlist() {
 }
 
 add_action( 'woocommerce_after_add_to_cart_button', 'vemus_child_render_single_wishlist_button', 11 );
-function vemus_child_render_single_single_wishlist_button() { // Corrected name to 'vemus_child_render_single_wishlist_button' but let's be careful with function names
-    vemus_child_render_single_wishlist_button();
-}
 
 function vemus_child_render_single_wishlist_button() {
     global $product;
@@ -237,11 +234,11 @@ require_once get_stylesheet_directory() . '/includes/shortcode-rudraksha-mukhi.p
 
 add_filter( 'the_content', 'vemus_child_rudraksha_content_override', 20 );
 function vemus_child_rudraksha_content_override( $content ) {
-    if ( is_admin() ) {
+    if ( is_admin() || ( function_exists( 'is_product' ) && is_product() ) ) {
         return $content;
     }
 
-    // Check if the current page or URL is one of our 14 Rudraksha Mukhi pages
+    // Check if the current page or URL is one of our Rudraksha Mukhi sacred info pages
     if ( class_exists( 'Vemus_Rudraksha_Data' ) ) {
         $page_id = function_exists( 'get_the_ID' ) ? get_the_ID() : 0;
         $mukhi   = Vemus_Rudraksha_Data::get_mukhi_by_page_id( $page_id );
@@ -253,4 +250,65 @@ function vemus_child_rudraksha_content_override( $content ) {
 
     return $content;
 }
+
+/**
+ * Automatically sort Rudraksha products numerically by Mukhi (1 Mukhi, 2 Mukhi, ..., 21 Mukhi, Gauri Shankar, Trijuti)
+ */
+add_filter( 'the_posts', 'vemus_child_sort_rudraksha_products_by_mukhi', 20, 2 );
+function vemus_child_sort_rudraksha_products_by_mukhi( $posts, $query ) {
+    if ( is_admin() && ! wp_doing_ajax() ) {
+        return $posts;
+    }
+    // Only sort queries returning products
+    if ( empty( $posts ) || ! is_array( $posts ) ) {
+        return $posts;
+    }
+    
+    // Check if at least one post is a product
+    $has_product = false;
+    foreach ( $posts as $p ) {
+        if ( isset( $p->post_type ) && 'product' === $p->post_type ) {
+            $has_product = true;
+            break;
+        }
+    }
+    if ( ! $has_product || ! class_exists( 'Vemus_Rudraksha_Data' ) ) {
+        return $posts;
+    }
+
+    usort( $posts, function( $a, $b ) {
+        $mukhi_a = Vemus_Rudraksha_Data::get_mukhi_by_page_id( $a->ID );
+        $mukhi_b = Vemus_Rudraksha_Data::get_mukhi_by_page_id( $b->ID );
+
+        // If both are recognized Rudrakshas (1 to 23)
+        if ( $mukhi_a > 0 && $mukhi_b > 0 ) {
+            return $mukhi_a - $mukhi_b;
+        }
+        // If only A is a Rudraksha, put it first
+        if ( $mukhi_a > 0 && $mukhi_b === 0 ) {
+            return -1;
+        }
+        // If only B is a Rudraksha, put it first
+        if ( $mukhi_a === 0 && $mukhi_b > 0 ) {
+            return 1;
+        }
+        // Otherwise maintain natural menu order / ID
+        return $a->menu_order - $b->menu_order;
+    });
+
+    return $posts;
+}
+
+/**
+ * Force-clean product delivery & guarantee trust badges (Remove "Free 30-day returns" and "$200 shipping")
+ */
+add_filter( 'theme_mod_tf_delivery_text2', '__return_empty_string' );
+add_filter( 'theme_mod_tf_delivery_icon2', '__return_empty_string' );
+
+add_filter( 'theme_mod_tf_delivery_text', function( $val ) {
+    if ( empty( $val ) || strpos( $val, '$200' ) !== false || strpos( $val, '30-day' ) !== false ) {
+        return 'Free Insured Express Shipping Across India';
+    }
+    return $val;
+});
 
