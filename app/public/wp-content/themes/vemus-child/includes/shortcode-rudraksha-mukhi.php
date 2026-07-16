@@ -50,6 +50,12 @@ if ( ! function_exists( 'vemus_rudraksha_mukhi_shortcode' ) ) {
         $all_data  = Vemus_Rudraksha_Data::get_all();
         $all_prods = Vemus_Rudraksha_Data::get_all_products();
 
+        foreach ( $all_data as $num_k => $item_v ) {
+            if ( ! empty( $item_v['page_id'] ) && function_exists( 'get_permalink' ) ) {
+                $all_data[ $num_k ]['url'] = get_permalink( $item_v['page_id'] );
+            }
+        }
+
         // Prepare JSON for Alpine.js dynamic switching
         $all_json       = json_encode( $all_data );
         $all_prods_json = json_encode( $all_prods );
@@ -401,18 +407,14 @@ if ( ! function_exists( 'vemus_rudraksha_mukhi_shortcode' ) ) {
                 tabList: ['overview', 'benefits', 'ritual', 'mantra'],
 
                 initShowcase() {
-                    this.startAutoTab();
+                    // Auto-scrolling tabs stopped per user requirement
                 },
 
                 startAutoTab() {
-                    if (this.tabAutoTimer) clearInterval(this.tabAutoTimer);
-                    this.tabAutoTimer = setInterval(() => {
-                        if (!this.isPaused) {
-                            let currentIdx = this.tabList.indexOf(this.activeTab);
-                            let nextIdx = (currentIdx + 1) % this.tabList.length;
-                            this.activeTab = this.tabList[nextIdx];
-                        }
-                    }, 5500);
+                    if (this.tabAutoTimer) {
+                        clearInterval(this.tabAutoTimer);
+                        this.tabAutoTimer = null;
+                    }
                 },
 
                 pauseAutoTab() {
@@ -487,10 +489,11 @@ if ( ! function_exists( 'vemus_rudraksha_mukhi_shortcode' ) ) {
                         this.japaComplete = false;
                         this.activeTab = 'overview';
                         this.isPaused = false;
-                        // Check if we should navigate directly if on a single page
-                        const pageId = this.currentData.page_id;
-                        if (pageId && window.location.href.includes('page_id=')) {
-                            window.location.href = '<?php echo home_url('/?page_id='); ?>' + pageId;
+                        // Navigate directly to the dedicated Mukhi page URL so the slug updates
+                        const targetUrl = this.currentData.url;
+                        if (targetUrl && window.location.href.replace(/#.*$/, '') !== targetUrl.replace(/#.*$/, '')) {
+                            window.location.href = targetUrl;
+                            return;
                         }
                     }
                 }

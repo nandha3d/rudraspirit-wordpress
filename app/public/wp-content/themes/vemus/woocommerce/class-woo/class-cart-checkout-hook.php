@@ -23,7 +23,7 @@ if (!class_exists('TFWC_Cart_Checkout')) {
 			add_action( 'woocommerce_before_cart_totals', array($this, 'tfwc_start_form_total' ) );
 			add_action( 'woocommerce_after_cart_totals', array($this, 'tfwc_cart_total_extra' ) );
 			add_action( 'woocommerce_after_cart_totals', array($this, 'tfwc_end_form_total' ) );
-			add_action( 'tf_after_cart_collaterals', array($this, 'vemus_testimonial' ),10 );
+			add_action( 'tf_after_cart_collaterals', array($this, 'tfwc_testimonial' ),10 );
 
 
 			// add_action( 'woocommerce_after_cart_table', array( $this, 'tfwc_note_form' ) );

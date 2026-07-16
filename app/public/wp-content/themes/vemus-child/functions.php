@@ -402,6 +402,74 @@ add_filter( 'theme_mod_badges_stock', '__return_zero' );
 add_filter( 'theme_mod_badges_sale', '__return_zero' );
 add_filter( 'theme_mod_badges_trending', '__return_zero' );
 add_filter( 'theme_mod_badges_new', '__return_zero' );
-add_filter( 'theme_mod_badges_order', '__return_zero' );
 add_filter( 'theme_mod_badges_custom', '__return_zero' );
+
+/**
+ * Permanently remove unwanted promotional cards from the shop page grid (image_box_product & image_box_product2)
+ */
+add_filter( 'theme_mod_image_box_product', '__return_zero' );
+add_filter( 'theme_mod_image_box_product2', '__return_zero' );
+
+/**
+ * Standardize Footer across ALL pages of the website using the Home Page footer (Footer Home 02 - ID 6182)
+ */
+add_filter( 'tf_get_footer_id', function( $footer_id ) {
+    if ( ! $footer_id || empty( $footer_id ) ) {
+        return 6182;
+    }
+    return $footer_id;
+}, 99 );
+
+add_filter( 'tf_footer_enabled', function( $status ) {
+    if ( ! $status && function_exists( 'get_template_id' ) ) {
+        return true;
+    }
+    return $status;
+}, 99 );
+
+/**
+ * Authentic Spiritual Testimonials for Cart Page and Checkout Thank You Page
+ */
+add_filter( 'theme_mod_testimonial_checkout', function() {
+    return json_encode([
+        [
+            'quote'  => '<i class="icon-quote-4" style="color: #d68019;"></i>',
+            'title'  => 'DIVINE BLESSINGS ACTIVATED',
+            'review' => '"Wearing my authentic Nepal 5 Mukhi Rudraksha from RudraSpirit has brought profound stillness and clarity to my daily meditation and life. You can truly feel the consecrated Vedic energy and purity of every bead!"',
+            'name'   => 'Rajesh K. • Verified Devotee',
+        ],
+        [
+            'quote'  => '<i class="icon-quote-4" style="color: #d68019;"></i>',
+            'title'  => 'SACRED & CONSECRATED',
+            'review' => '"The 108 Beej Mantra consecration before shipping makes such a difference. As soon as I opened the sacred packaging, a deep wave of peace and spiritual aura filled the room. Grateful beyond words."',
+            'name'   => 'Meera S. • Vedic Practitioner',
+        ]
+    ]);
+});
+
+add_filter( 'theme_mod_testimonial_boxes', function() {
+    return json_encode([
+        [
+            'quote'  => '<i class="icon icon-quote-3" style="color: #d68019;"></i>',
+            'review' => 'Every Rudraksha bead from RudraSpirit undergoes rigorous lab certification and authentic 108 Beej Mantra energization. A truly life-changing spiritual experience.',
+            'name'   => 'Dr. Ananya R. • Spiritual Guide',
+            'image'  => function_exists('home_url') ? home_url('/wp-content/uploads/rudraksha/1PF8QuxEvdUbXtn5NqPzIp6rZbl59LkbKLCV4XW1.webp') : '',
+            'stars'  => 5,
+        ],
+        [
+            'quote'  => '<i class="icon icon-quote-3" style="color: #d68019;"></i>',
+            'review' => 'The authenticity and divine vibration of these Nepal Mukhi beads are unmatched. Fast insured shipping and beautiful, reverent packaging.',
+            'name'   => 'Siddharth M. • Meditation Student',
+            'image'  => function_exists('home_url') ? home_url('/wp-content/uploads/rudraksha/1PF8QuxEvdUbXtn5NqPzIp6rZbl59LkbKLCV4XW1.webp') : '',
+            'stars'  => 5,
+        ]
+    ]);
+});
+
+add_filter( 'gettext', function( $translated, $text, $domain ) {
+    if ( strpos( $text, 'You are awesome, Vemus!' ) !== false ) {
+        return 'Har Har Mahadev! Thank you for welcoming sacred Vedic prana and divine Rudraksha blessings into your life.';
+    }
+    return $translated;
+}, 10, 3 );
 

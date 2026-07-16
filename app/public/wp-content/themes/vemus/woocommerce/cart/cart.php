@@ -87,6 +87,22 @@ remove_action( 'woocommerce_cart_collaterals', 'woocommerce_cross_sell_display' 
 													?>
 													
 													<div class="order_product">
+														<?php
+															if( ! (!empty($cart_item['tf_custom_bundle']) && !empty($cart_item['is_bundle_child'])) ){
+																echo apply_filters( // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+																	'woocommerce_cart_item_remove_link',
+																	sprintf(
+																		'<a href="%s" class="remove tf-cart-remove-icon" aria-label="%s" data-product_id="%s" data-product_sku="%s" title="%s"><i class="icon-close"></i></a>',
+																		esc_url( wc_get_cart_remove_url( $cart_item_key ) ),
+																		esc_html__( 'Remove this item', 'vemus' ),
+																		esc_attr( $product_id ),
+																		esc_attr( $_product->get_sku() ),
+																		esc_attr__( 'Remove this item', 'vemus' )
+																	),
+																	$cart_item_key
+																);
+															}
+														?>
 														<a href="<?php echo esc_url($product_permalink); ?>" class="image">
 															<?php echo wp_kses_post($thumbnail); ?>
 														</a>
@@ -158,21 +174,6 @@ remove_action( 'woocommerce_cart_collaterals', 'woocommerce_cross_sell_display' 
 
 													echo apply_filters( 'woocommerce_cart_item_quantity', $product_quantity, $cart_item_key, $cart_item ); // PHPCS: XSS ok.
 												}
-												?>
-												<?php
-													if( ! (!empty($cart_item['tf_custom_bundle']) && !empty($cart_item['is_bundle_child'])) ){
-														echo apply_filters( // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-															'woocommerce_cart_item_remove_link',
-															sprintf(
-																'<a href="%s" class="remove tf-btn-line style-line-2 fw-normal remove-cart" aria-label="%s" data-product_id="%s" data-product_sku="%s">Remove</a>',
-																esc_url( wc_get_cart_remove_url( $cart_item_key ) ),
-																esc_html__( 'Remove this item', 'vemus' ),
-																esc_attr( $product_id ),
-																esc_attr( $_product->get_sku() )
-															),
-															$cart_item_key
-														);
-													}
 												?>
 												</td>
 

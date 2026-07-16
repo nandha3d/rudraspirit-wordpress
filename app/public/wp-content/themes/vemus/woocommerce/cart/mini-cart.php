@@ -192,16 +192,14 @@ do_action( 'woocommerce_before_mini_cart' );
 													echo apply_filters(
 														'woocommerce_cart_item_remove_link',
 														sprintf(
-															'<a href="#" class="remove remove_from_cart_button tf-btn-line style-line-2" aria-label="%s" data-product_id="%s" data-cart_item_key="%s" data-product_sku="%s">
-															<span class="text-caption">
-																%s
-															</span>
+															'<a href="#" class="remove remove_from_cart_button tf-cart-remove-icon" aria-label="%s" data-product_id="%s" data-cart_item_key="%s" data-product_sku="%s" title="%s">
+																<i class="icon-close"></i>
 															</a>',
 															esc_attr__( 'Remove this item', 'vemus' ),
 															esc_attr( $product_id ),
 															esc_attr( $cart_item_key ),
 															esc_attr( $_product->get_sku() ),
-															esc_attr__( 'Remove', 'vemus' ),
+															esc_attr__( 'Remove', 'vemus' )
 														),
 														$cart_item_key
 													);
