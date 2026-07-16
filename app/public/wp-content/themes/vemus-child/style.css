@@ -2508,15 +2508,21 @@ a.button,
 }
 
 /* =========================================
-   Remove Currency Switcher in the Bottom / Footer
+   Remove Currency Switcher Completely (Header, Mobile & Bottom/Footer)
    ========================================= */
+.vemus-currency-switcher,
+.wd-currency-switcher,
 .footer-bottom .tf-currencies,
 .tf-footer .tf-currencies,
 .footer-bar-language .tf-currencies,
 .footer-bottom-wrap .tf-currencies,
-#custom-currency-switcher {
+.tf-currencies,
+#custom-currency-switcher,
+select.type-currencies,
+.setting-curreny-language {
     display: none !important;
 }
+
 
 /* =========================================
    Cart Page Dual-Column Clean Layout & Styling (No Theme Color)

@@ -538,3 +538,19 @@ add_filter( 'gettext', function( $translated, $text, $domain ) {
     return $translated;
 }, 10, 3 );
 
+/**
+ * Remove All Currency Switchers Everywhere (Header, Mobile & Bottom Footer)
+ */
+add_action( 'init', function() {
+    remove_shortcode( 'vemus_currency_switcher' );
+    add_shortcode( 'vemus_currency_switcher', '__return_empty_string' );
+}, 999 );
+
+add_filter( 'do_shortcode_tag', function( $output, $tag, $attr, $m ) {
+    if ( $tag === 'vemus_currency_switcher' ) {
+        return '';
+    }
+    return $output;
+}, 999, 4 );
+
+
