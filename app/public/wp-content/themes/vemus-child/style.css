@@ -1760,7 +1760,12 @@ html body [data-elementor-type="tf_header_footer"] a:hover {
  * ==================================================================== */
 body.single-product .tf-page-title,
 body.single-product .page-title-section,
-body.single-product .page-header {
+body.single-product .page-header,
+body.home .tf-page-title,
+body.home .page-title-section,
+body.home .page-header,
+body.home .entry-header,
+body.home h1.page-title {
     display: none !important;
 }
 
