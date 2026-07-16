@@ -1,0 +1,18 @@
+# BEGIN WordPress bridge for Hostinger Git
+<IfModule mod_rewrite.c>
+RewriteEngine On
+RewriteBase /
+
+# If requested file or folder exists inside app/public/, serve it directly from app/public/
+RewriteCond %{REQUEST_URI} !^/app/public/
+RewriteCond %{DOCUMENT_ROOT}/app/public%{REQUEST_URI} -f [OR]
+RewriteCond %{DOCUMENT_ROOT}/app/public%{REQUEST_URI} -d
+RewriteRule ^(.*)$ app/public/$1 [L,QSA]
+
+# Route front-end requests through index.php bridge
+RewriteRule ^index\.php$ - [L]
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ index.php [L]
+</IfModule>
+# END WordPress bridge for Hostinger Git
