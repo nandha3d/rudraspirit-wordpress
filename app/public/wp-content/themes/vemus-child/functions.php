@@ -553,4 +553,15 @@ add_filter( 'do_shortcode_tag', function( $output, $tag, $attr, $m ) {
     return $output;
 }, 999, 4 );
 
+/**
+ * Strip tf-currencies HTML directly from all Elementor widgets before sending to browser
+ */
+add_filter( 'elementor/widget/render_content', function( $widget_content, $widget ) {
+    if ( strpos( $widget_content, 'tf-currencies' ) !== false ) {
+        $widget_content = preg_replace( '/<div class="tf-currencies[^>]*>.*?<\/div>\s*/is', '', $widget_content );
+    }
+    return $widget_content;
+}, 999, 2 );
+
+
 
