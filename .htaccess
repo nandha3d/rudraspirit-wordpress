@@ -1,18 +1,20 @@
-# BEGIN WordPress bridge for Hostinger Git
+DirectoryIndex index.php
+
 <IfModule mod_rewrite.c>
 RewriteEngine On
 RewriteBase /
 
-# If requested file or folder exists inside app/public/, serve it directly from app/public/
+# 1. If requesting root homepage "/", route straight to index.php bridge (avoids 403 folder listing error)
+RewriteRule ^$ index.php [L]
+
+# 2. If requesting a real static asset (.css, .js, .png, .jpg, etc.) inside app/public/, serve it directly
 RewriteCond %{REQUEST_URI} !^/app/public/
-RewriteCond %{DOCUMENT_ROOT}/app/public%{REQUEST_URI} -f [OR]
-RewriteCond %{DOCUMENT_ROOT}/app/public%{REQUEST_URI} -d
+RewriteCond %{DOCUMENT_ROOT}/app/public%{REQUEST_URI} -f
 RewriteRule ^(.*)$ app/public/$1 [L,QSA]
 
-# Route front-end requests through index.php bridge
+# 3. For all front-end requests, subpages, products, and virtual URLs, route cleanly to index.php bridge
 RewriteRule ^index\.php$ - [L]
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule ^(.*)$ index.php [L]
 </IfModule>
-# END WordPress bridge for Hostinger Git
