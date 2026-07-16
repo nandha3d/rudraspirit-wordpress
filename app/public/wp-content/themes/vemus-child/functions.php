@@ -310,7 +310,7 @@ add_filter( 'woocommerce_default_catalog_orderby', function() {
 
 add_action( 'pre_get_posts', 'vemus_child_order_products_query', 20 );
 function vemus_child_order_products_query( $query ) {
-    if ( ! is_admin() && $query->is_main_query() && ( $query->get( 'post_type' ) === 'product' || is_shop() || is_product_category() || is_product_tag() ) ) {
+    if ( ! is_admin() && $query->is_main_query() && ( $query->get( 'post_type' ) === 'product' || ( function_exists( 'is_shop' ) && is_shop() ) || ( function_exists( 'is_product_category' ) && is_product_category() ) || ( function_exists( 'is_product_tag' ) && is_product_tag() ) ) ) {
         $query->set( 'orderby', 'menu_order title' );
         $query->set( 'order', 'ASC' );
     }
