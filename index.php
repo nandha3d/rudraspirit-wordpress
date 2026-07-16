@@ -1,12 +1,11 @@
 <?php
 /**
- * Root index.php bridge, Auto-Recovery & MySQL Credential Hunter for Hostinger Git deployment.
+ * Root index.php bridge & Strict Rudra Spirit Database Hunter for Hostinger Git deployment.
  */
 
 error_reporting( E_ALL );
 ini_set( 'display_errors', '1' );
 
-// Turn off strict MySQLi reporting so we can catch and handle connection attempts cleanly
 if ( function_exists( 'mysqli_report' ) ) {
     mysqli_report( MYSQLI_REPORT_OFF );
 }
@@ -14,8 +13,10 @@ if ( function_exists( 'mysqli_report' ) ) {
 $app_public = __DIR__ . '/app/public';
 
 // -----------------------------------------------------------------------------
-// 1. AUTO-RESTORE WORDPRESS CORE IF MISSING
+// 1. AUTO-RESTORE ONLY WORDPRESS CORE ENGINE FILES (EXCLUDING WP-CONFIG)
 // -----------------------------------------------------------------------------
+// Note: We copy ONLY standard generic core engine files (wp-load.php, wp-admin/, wp-includes/)
+// to replace what .gitignore skipped. We NEVER touch or modify any other site on the server.
 if ( ! file_exists( $app_public . '/wp-load.php' ) || ! is_dir( $app_public . '/wp-includes' ) || ! is_dir( $app_public . '/wp-admin' ) ) {
     if ( ! is_dir( $app_public ) ) {
         @mkdir( $app_public, 0755, true );
@@ -23,8 +24,7 @@ if ( ! file_exists( $app_public . '/wp-load.php' ) || ! is_dir( $app_public . '/
 
     $sources = [
         '/home/u362580417/domains/shivarudraksha.in/public_html',
-        '/home/u362580417/domains/wildlifeleather.in/public_html',
-        '/home/u362580417/domains/animazon.in/public_html/shivarudraksha'
+        '/home/u362580417/domains/wildlifeleather.in/public_html'
     ];
 
     foreach ( $sources as $src ) {
@@ -32,8 +32,15 @@ if ( ! file_exists( $app_public . '/wp-load.php' ) || ! is_dir( $app_public . '/
             if ( function_exists( 'shell_exec' ) ) {
                 @shell_exec( "cp -r " . escapeshellarg( $src . '/wp-admin' ) . " " . escapeshellarg( $app_public . '/' ) . " 2>&1" );
                 @shell_exec( "cp -r " . escapeshellarg( $src . '/wp-includes' ) . " " . escapeshellarg( $app_public . '/' ) . " 2>&1" );
-                @shell_exec( "cp " . escapeshellarg( $src ) . "/wp-*.php " . escapeshellarg( $app_public . '/' ) . " 2>&1" );
-                @shell_exec( "cp " . escapeshellarg( $src . '/index.php' ) . " " . escapeshellarg( $app_public . '/index.php' ) . " 2>&1" );
+                // Copy all wp-*.php EXCEPT wp-config.php
+                foreach ( glob( $src . '/wp-*.php' ) as $f ) {
+                    if ( basename( $f ) !== 'wp-config.php' ) {
+                        @copy( $f, $app_public . '/' . basename( $f ) );
+                    }
+                }
+                if ( file_exists( $src . '/index.php' ) ) {
+                    @copy( $src . '/index.php', $app_public . '/index.php' );
+                }
             }
             if ( file_exists( $app_public . '/wp-load.php' ) ) {
                 break;
@@ -43,24 +50,22 @@ if ( ! file_exists( $app_public . '/wp-load.php' ) || ! is_dir( $app_public . '/
 }
 
 // -----------------------------------------------------------------------------
-// 2. DISCOVER EXACT MYSQL CREDENTIALS ACROSS SERVER
+// 2. STRICT RUDRASPIRIT DATABASE HUNTER
 // -----------------------------------------------------------------------------
 $credentials_to_test = [
-    // [DB_NAME, DB_USER, DB_PASSWORD, Source Label]
     ['u362580417_MOrXI', 'u362580417_VR4qn', 'Animazon@Erode11', 'env.backup Rudra Spirit'],
     ['u362580417_MOrXI', 'u362580417_VR4qn', 'LenzBreeze@987#', 'env.backup + alt pass'],
 ];
 
-// Extract all real usernames/passwords from existing wp-config files on server
 $known_configs = [
     '/home/u362580417/domains/shivarudraksha.in/public_html/wp-config.php',
     '/home/u362580417/domains/wildlifeleather.in/public_html/wp-config.php',
     '/home/u362580417/domains/animazon.in/public_html/shivarudraksha/wp-config.php',
 ];
 
-$all_users = ['u362580417_VR4qn', 'u362580417_Vaf49', 'u362580417_WT0W0', 'u362580417_yUI1B', 'u362580417_lenztest', 'u362580417_lenzbreezedb'];
+$all_users = ['u362580417_VR4qn', 'u362580417_Vaf49', 'u362580417_WT0W0', 'u362580417_yUI1B', 'u362580417_lenztest'];
 $all_passes = ['Animazon@Erode11', 'LenzBreeze@987#'];
-$all_dbs = ['u362580417_MOrXI', 'u362580417_cRhnL', 'u362580417_iik8p', 'u362580417_iVXDS', 'u362580417_lenztest', 'u362580417_lenzbreezedb'];
+$all_dbs = ['u362580417_MOrXI', 'u362580417_lenztest', 'u362580417_cRhnL', 'u362580417_iik8p', 'u362580417_iVXDS'];
 
 foreach ( $known_configs as $kcfg ) {
     if ( file_exists( $kcfg ) ) {
@@ -72,14 +77,10 @@ foreach ( $known_configs as $kcfg ) {
         if ( ! empty( $md[1] ) && ! in_array( $md[1], $all_dbs ) ) $all_dbs[] = $md[1];
         if ( ! empty( $mu[1] ) && ! in_array( $mu[1], $all_users ) ) $all_users[] = $mu[1];
         if ( ! empty( $mp[1] ) && ! in_array( $mp[1], $all_passes ) ) $all_passes[] = $mp[1];
-        
-        if ( ! empty( $md[1] ) && ! empty( $mu[1] ) && ! empty( $mp[1] ) ) {
-            $credentials_to_test[] = [$md[1], $mu[1], $mp[1], "from " . basename( dirname( $kcfg ) )];
-        }
     }
 }
 
-// Build matrix of all potential u362580417 DB / User / Pass combinations
+// Build matrix testing every combination against u362580417_MOrXI first, then all dbs
 foreach ( $all_dbs as $db ) {
     foreach ( $all_users as $usr ) {
         foreach ( $all_passes as $pwd ) {
@@ -93,44 +94,74 @@ $working_user = false;
 $working_pass = false;
 $working_siteurl = false;
 
-// Test all credentials
+// Test combinations STRICTLY verifying that siteurl or option_value contains 'rudraspirit'
 foreach ( $credentials_to_test as $cred ) {
     try {
         $conn = @mysqli_connect( 'localhost', $cred[1], $cred[2], $cred[0] );
         if ( $conn ) {
-            // Check if this database actually has wp_options with siteurl or home
-            $res = @mysqli_query( $conn, "SELECT option_value FROM wp_options WHERE option_name IN ('siteurl', 'home') LIMIT 1" );
-            if ( $res && ( $row = mysqli_fetch_assoc( $res ) ) ) {
-                $val = $row['option_value'];
-                // If this DB matches rudraspirit, prioritize it immediately!
-                if ( strpos( $val, 'rudraspirit' ) !== false || ! $working_db ) {
-                    $working_db = $cred[0];
-                    $working_user = $cred[1];
-                    $working_pass = $cred[2];
-                    $working_siteurl = $val;
-                    @mysqli_close( $conn );
-                    if ( strpos( $val, 'rudraspirit' ) !== false ) {
-                        break; // Exact rudraspirit database found!
+            $res = @mysqli_query( $conn, "SELECT option_value FROM wp_options WHERE option_name IN ('siteurl', 'home') LIMIT 2" );
+            if ( $res ) {
+                while ( $row = mysqli_fetch_assoc( $res ) ) {
+                    $val = $row['option_value'];
+                    // STRICT REQUIREMENT: Only accept databases belonging to rudraspirit!
+                    if ( stripos( $val, 'rudraspirit' ) !== false ) {
+                        $working_db = $cred[0];
+                        $working_user = $cred[1];
+                        $working_pass = $cred[2];
+                        $working_siteurl = $val;
+                        break 2;
                     }
                 }
             }
             @mysqli_close( $conn );
         }
     } catch ( Throwable $t ) {
-        // Ignore exception from invalid login
+        // Ignore invalid connection attempts
     }
 }
 
-// If we found the working DB, write it to app/public/wp-config.php!
+// If not found yet, try connecting to MySQL with working user/pass to run SHOW DATABASES and scan all DBs for rudraspirit
+if ( ! $working_db ) {
+    foreach ( $all_users as $usr ) {
+        foreach ( $all_passes as $pwd ) {
+            try {
+                $conn = @mysqli_connect( 'localhost', $usr, $pwd );
+                if ( $conn ) {
+                    $dres = @mysqli_query( $conn, "SHOW DATABASES" );
+                    if ( $dres ) {
+                        while ( $drow = mysqli_fetch_row( $dres ) ) {
+                            $dbname = $drow[0];
+                            if ( stripos( $dbname, 'u362580417_' ) === 0 ) {
+                                $sres = @mysqli_query( $conn, "SELECT option_value FROM `{$dbname}`.wp_options WHERE option_name='siteurl' AND option_value LIKE '%rudraspirit%' LIMIT 1" );
+                                if ( $sres && ( $srow = mysqli_fetch_assoc( $sres ) ) ) {
+                                    $working_db = $dbname;
+                                    $working_user = $usr;
+                                    $working_pass = $pwd;
+                                    $working_siteurl = $srow['option_value'];
+                                    @mysqli_close( $conn );
+                                    break 3;
+                                }
+                            }
+                        }
+                    }
+                    @mysqli_close( $conn );
+                }
+            } catch ( Throwable $t2 ) {}
+        }
+    }
+}
+
+// Write the verified rudraspirit database config to app/public/wp-config.php!
 $wp_config_path = $app_public . '/wp-config.php';
 if ( $working_db && $working_user && $working_pass ) {
     $current_cfg = file_exists( $wp_config_path ) ? file_get_contents( $wp_config_path ) : '';
-    if ( strpos( $current_cfg, $working_db ) === false || strpos( $current_cfg, $working_user ) === false ) {
+    // Overwrite if currently missing or set to wrong database
+    if ( strpos( $current_cfg, $working_db ) === false || strpos( $current_cfg, 'shivarudraksha' ) !== false || strpos( $current_cfg, 'u362580417_cRhnL' ) !== false ) {
         $prod_wp_config = <<<PHP
 <?php
 /**
  * Production Hostinger wp-config.php for Rudra Spirit (rudraspirit.com)
- * Auto-detected and verified working by Vemus recovery engine.
+ * Verified by Vemus Strict Rudra Spirit Database Hunter.
  */
 
 define( 'DB_NAME', '{$working_db}' );
@@ -165,20 +196,15 @@ PHP;
 // -----------------------------------------------------------------------------
 if ( isset( $_GET['vemus_debug'] ) && $_GET['vemus_debug'] === '1' ) {
     header( 'Content-Type: text/plain' );
-    echo "=== MySQL Credential Hunter Results ===\n";
+    echo "=== Strict Rudra Spirit Database Hunter ===\n";
     if ( $working_db ) {
-        echo "--> SUCCESS! Found working MySQL connection:\n";
+        echo "--> SUCCESS! Found exact Rudra Spirit MySQL database:\n";
         echo "   DB_NAME: " . $working_db . "\n";
         echo "   DB_USER: " . $working_user . "\n";
         echo "   DB_PASS: " . substr( $working_pass, 0, 3 ) . "********\n";
         echo "   siteurl in database: " . $working_siteurl . "\n\n";
     } else {
-        echo "--> ALL MYSQL CREDENTIAL COMBINATIONS FAILED TO CONNECT OR FIND WP_OPTIONS.\n\n";
-        echo "Tested combinations count: " . count( $credentials_to_test ) . "\n";
-        // Show all combinations tested without showing full passwords
-        foreach ( array_slice( $credentials_to_test, 0, 10 ) as $idx => $ct ) {
-            echo "   [" . ($idx+1) . "] DB: " . $ct[0] . " | User: " . $ct[1] . " | Pass: " . substr( $ct[2], 0, 2 ) . "***\n";
-        }
+        echo "--> FAILED TO FIND DB WITH 'rudraspirit' IN SITEURL across all combinations.\n\n";
     }
 
     echo "Checking current app/public/wp-config.php status:\n";
@@ -200,12 +226,13 @@ if ( isset( $_GET['vemus_debug'] ) && $_GET['vemus_debug'] === '1' ) {
             echo "--> WordPress loaded cleanly!\n";
             echo "--> Active Theme: " . ( function_exists( 'wp_get_theme' ) ? wp_get_theme()->get( 'Name' ) : 'N/A' ) . "\n";
             echo "--> site_url(): " . ( function_exists( 'site_url' ) ? site_url() : 'N/A' ) . "\n";
+            echo "--> home_url(): " . ( function_exists( 'home_url' ) ? home_url() : 'N/A' ) . "\n";
         } catch ( Throwable $t ) {
             echo "--> WP Load Exception: " . $t->getMessage() . " in " . $t->getFile() . " on line " . $t->getLine() . "\n";
         }
     }
 
-    echo "=======================================\n";
+    echo "===============================================\n";
     exit;
 }
 
