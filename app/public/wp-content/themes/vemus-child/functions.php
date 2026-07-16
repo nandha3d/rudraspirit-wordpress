@@ -3,6 +3,47 @@
  * Vemus Child Theme functions and definitions
  */
 
+/**
+ * Polyfill for WP_Block_Templates_Registry (introduced in WordPress 6.7).
+ * Prevents WooCommerce fatal errors on sites running WordPress < 6.7.
+ */
+if ( ! class_exists( 'WP_Block_Templates_Registry', false ) ) {
+    class WP_Block_Templates_Registry {
+        private static $instance = null;
+
+        public static function get_instance() {
+            if ( null === self::$instance ) {
+                self::$instance = new self();
+            }
+            return self::$instance;
+        }
+
+        public function is_registered( $template_name ) {
+            return false;
+        }
+
+        public function get_all_registered() {
+            return array();
+        }
+
+        public function get_registered( $template_name ) {
+            return null;
+        }
+
+        public function register( $template_name, $args = array() ) {
+            return false;
+        }
+
+        public function unregister( $template_name ) {
+            return false;
+        }
+
+        public function __call( $name, $arguments ) {
+            return false;
+        }
+    }
+}
+
 function vemus_child_enqueue_styles() {
     // Parent Styles
     wp_enqueue_style( 'vemus-style', get_template_directory_uri() . '/style.css' );
