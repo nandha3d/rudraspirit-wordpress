@@ -44,6 +44,26 @@ if ( ! class_exists( 'WP_Block_Templates_Registry', false ) ) {
     }
 }
 
+/**
+ * Ensure Header 01 (#header.header-01) is used globally across ALL pages
+ * (Checkout, Cart, Single Product, Shop) regardless of live database theme mods.
+ */
+add_filter( 'theme_mod_style_header', function( $header ) {
+    return 'header-01';
+}, 999 );
+
+/**
+ * Ensure Royal Elementor Addons cart & minicart overrides stay OFF globally
+ * so WooCommerce renders theme templates cleanly in live and local environments.
+ */
+add_filter( 'pre_option_wpr_override_woo_cart', function( $val ) {
+    return 'off';
+}, 999 );
+
+add_filter( 'pre_option_wpr_override_woo_mini_cart', function( $val ) {
+    return 'off';
+}, 999 );
+
 function vemus_child_enqueue_styles() {
     // Parent Styles
     wp_enqueue_style( 'vemus-style', get_template_directory_uri() . '/style.css' );

@@ -1716,15 +1716,26 @@ html body [data-elementor-type="tf_header_footer"] a:hover {
     transform: translateY(-1px) !important;
 }
 
-/* Selected / Active state: Theme Gold Highlight (#D4AF37) */
+/* Selected / Active state: Theme Gold Highlight (#D4AF37) across all swatch variations */
 .tf-main-product .tf-product-info-variant .variant-picker-item .wcboost-variation-swatches.wcboost-variation-swatches--button .wcboost-variation-swatches__item.selected,
 .tf-main-product .tf-product-info-variant .variant-picker-item .wcboost-variation-swatches.wcboost-variation-swatches--label .wcboost-variation-swatches__item.selected,
 .tf-main-product .tf-product-info-variant .variant-picker-item .wcboost-variation-swatches .wcboost-variation-swatches__item.selected,
 .wcboost-variation-swatches--button .wcboost-variation-swatches__item.selected,
 .wcboost-variation-swatches--label .wcboost-variation-swatches__item.selected,
 .wcboost-variation-swatches .wcboost-variation-swatches__item.selected,
-.variant-picker-item .size-btn.active {
+.variant-picker-item .size-btn.active,
+.variant-picker-item .swatch-item.active,
+.variant-picker-item .swatch-item.selected,
+.variant-picker-item .variable-item.selected,
+.variant-picker-item .variable-item.active,
+.tf-product-info-variant .variant-picker-item input[type="radio"]:checked + label,
+.tf-product-info-variant .variant-picker-item input[type="radio"]:checked + .wcboost-variation-swatches__item,
+.tf-product-info-variant .variant-picker-item .wcboost-variation-swatches__item[data-selected="true"],
+.tf-product-info-variant .variant-picker-item .wcboost-variation-swatches__item.selected,
+.tf-product-info-variant .variant-picker-item .wcboost-variation-swatches__item.active {
     background: linear-gradient(135deg, #D4AF37 0%, #B88647 100%) !important;
+    background-color: #D4AF37 !important;
+    background-image: linear-gradient(135deg, #D4AF37 0%, #B88647 100%) !important;
     border-color: #B88647 !important;
     color: #191410 !important;
     font-weight: 700 !important;
@@ -1746,7 +1757,8 @@ html body [data-elementor-type="tf_header_footer"] a:hover {
 .wcboost-variation-swatches--round .wcboost-variation-swatches__item img,
 .wcboost-variation-swatches--round.wcboost-variation-swatches--button .wcboost-variation-swatches__item,
 .wcboost-variation-swatches--rounded .wcboost-variation-swatches__item,
-.wcboost-variation-swatches--rounded .wcboost-variation-swatches__item img {
+.wcboost-variation-swatches--rounded .wcboost-variation-swatches__item img,
+.tf-main-product .tf-product-info-variant .variant-picker-item .wcboost-variation-swatches.wcboost-variation-swatches--button .wcboost-variation-swatches__item {
     border-radius: 10px !important;
 }
 
@@ -2810,6 +2822,48 @@ a.button,
     color: #ffffff !important;
     transform: rotate(90deg) scale(1.08) !important;
     box-shadow: 0 4px 10px rgba(229, 57, 53, 0.25) !important;
+}
+
+/* ====================================================================
+ * LIVE & LOCAL LAYOUT AND SPACING FIXES
+ * 1. Force generous padding between Header & Main Product container
+ * ==================================================================== */
+#themesflat-content.page-single-no-thumb,
+.single-product #themesflat-content,
+.single-product .tf-main-product {
+    padding-top: 45px !important;
+    margin-top: 20px !important;
+}
+
+/* Hide duplicate top bars if present on live server */
+#top-bar ~ #top-bar,
+.top-bar-1 ~ .top-bar-1 {
+    display: none !important;
+}
+
+/* ====================================================================
+ * 2. Generous Gap & Spacing between Product Card & Sections (You May Also Like, Related, FBT, Tabs)
+ * ==================================================================== */
+.single-product section.up-sells.products,
+.single-product section.related.products,
+.single-product .tf-product-fbt,
+.single-product .woocommerce-tabs,
+.single-product .up-sells.upsells.products {
+    margin-top: 65px !important;
+    padding-top: 45px !important;
+    border-top: 1px solid var(--line, #E5E5E5) !important;
+    clear: both !important;
+}
+
+.single-product section.up-sells.products h2,
+.single-product section.related.products h2,
+.single-product .tf-minicart-recommendations-title {
+    margin-bottom: 30px !important;
+    font-size: 24px !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.5px !important;
+    color: var(--bs-heading-color, #1f1f1f) !important;
+    text-transform: uppercase !important;
 }
 
 
