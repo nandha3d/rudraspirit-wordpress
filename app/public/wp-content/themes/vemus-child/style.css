@@ -1684,7 +1684,7 @@ html body [data-elementor-type="tf_header_footer"] a:hover {
     padding: 8px 20px !important;
     margin: 4px !important;
     border: 1px solid rgba(212, 175, 55, 0.4) !important;
-    border-radius: 4px !important;
+    border-radius: 10px !important;
     background-color: #FFFFFF !important;
     color: #191410 !important;
     font-size: 15px !important;
@@ -1721,7 +1721,7 @@ html body [data-elementor-type="tf_header_footer"] a:hover {
     color: #191410 !important;
     font-weight: 700 !important;
     box-shadow: 0 4px 14px rgba(212, 175, 55, 0.35), 0 0 0 1px #D4AF37 !important;
-    border-radius: 4px !important;
+    border-radius: 10px !important;
 }
 
 /* Color & Image Swatches specifically when selected */
@@ -1730,16 +1730,16 @@ html body [data-elementor-type="tf_header_footer"] a:hover {
 .variant-picker-item .color-btn.active {
     box-shadow: 0 0 0 2px #D4AF37 !important;
     border-color: #D4AF37 !important;
-    border-radius: 4px !important;
+    border-radius: 10px !important;
 }
 
-/* Override round/rounded swatch modifier classes to ensure reduced rounded corners (4px) */
+/* Override round/rounded swatch modifier classes to ensure elegant rounded corners (10px) */
 .wcboost-variation-swatches--round .wcboost-variation-swatches__item,
 .wcboost-variation-swatches--round .wcboost-variation-swatches__item img,
 .wcboost-variation-swatches--round.wcboost-variation-swatches--button .wcboost-variation-swatches__item,
 .wcboost-variation-swatches--rounded .wcboost-variation-swatches__item,
 .wcboost-variation-swatches--rounded .wcboost-variation-swatches__item img {
-    border-radius: 4px !important;
+    border-radius: 10px !important;
 }
 
 /* ====================================================================
@@ -1753,5 +1753,47 @@ html body [data-elementor-type="tf_header_footer"] a:hover {
 .single-product #tab-description,
 .single-product #tab-additional_information {
     display: none !important;
+}
+
+/* ====================================================================
+ * Single Product Top Margin / Padding: Exactly 20px as requested by user
+ * ==================================================================== */
+body.single-product .tf-page-title,
+body.single-product .page-title-section,
+body.single-product .page-header {
+    display: none !important;
+}
+
+body.single-product .section-single-product,
+body.single-product .flat-single-product,
+body.single-product .tf-single-product,
+body.single-product .tf-main-product,
+body.single-product .section-image-zoom,
+body.single-product #main-content,
+body.single-product .site-content,
+body.single-product #content,
+body.single-product .main-content {
+    margin-top: 20px !important;
+    padding-top: 20px !important;
+}
+
+/* ====================================================================
+ * Button Rounded Corners: Make buttons and add-to-bag action CTA have smooth, elegant rounded corners (12px)
+ * ==================================================================== */
+body.single-product .single_add_to_cart_button,
+body.single-product .btn-add-to-cart,
+.woocommerce button.button.alt,
+.woocommerce a.button.alt,
+.woocommerce input.button.alt,
+.tf-single-product .single_add_to_cart_button,
+.tf-main-product-grid .single_variation_wrap .btn-add-to-cart,
+.btn-wishlist,
+.tf-product-info-list .wishlist-button,
+.tf-product-info-list a.add_to_wishlist,
+button.button,
+a.button,
+.btn,
+.inner-quantity .qty_button {
+    border-radius: 12px !important;
 }
 
