@@ -2830,14 +2830,20 @@ a.button,
  * ==================================================================== */
 #themesflat-content.page-single-no-thumb,
 .single-product #themesflat-content,
-.single-product .tf-main-product {
-    padding-top: 45px !important;
-    margin-top: 20px !important;
+.single-product #main-content,
+.single-product .tf-main-product,
+.elementor-9187 ~ #themesflat-content,
+.elementor-9187 + #themesflat-content {
+    padding-top: 50px !important;
+    margin-top: 25px !important;
 }
 
-/* Hide duplicate top bars if present on live server */
+/* Hide duplicate top bars if present on live server (both Theme and Elementor marquee bars) */
 #top-bar ~ #top-bar,
-.top-bar-1 ~ .top-bar-1 {
+.top-bar-1 ~ .top-bar-1,
+.deensimc-marquee-main-container ~ .deensimc-marquee-main-container,
+.deensimc-marquee-main-container + .deensimc-marquee-main-container,
+.elementor-9187 .elementor-element-caf5d2b ~ .elementor-element-caf5d2b {
     display: none !important;
 }
 

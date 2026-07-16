@@ -68,11 +68,15 @@ function vemus_child_enqueue_styles() {
     // Parent Styles
     wp_enqueue_style( 'vemus-style', get_template_directory_uri() . '/style.css' );
     
-    // Child Styles
+    // Dynamic cache-busting timestamp based on file modified time
+    $child_style_path = get_stylesheet_directory() . '/style.css';
+    $child_version = file_exists( $child_style_path ) ? filemtime( $child_style_path ) : time();
+    
+    // Child Styles - enqueued AFTER parent and all plugins due to priority 999
     wp_enqueue_style( 'vemus-child-style',
         get_stylesheet_directory_uri() . '/style.css',
         array( 'vemus-style' ),
-        wp_get_theme()->get('Version')
+        $child_version
     );
 
     // Enqueue Alpine Wishlist Logic
@@ -83,7 +87,7 @@ function vemus_child_enqueue_styles() {
         'ajax_url' => admin_url( 'admin-ajax.php' )
     ));
 }
-add_action( 'wp_enqueue_scripts', 'vemus_child_enqueue_styles' );
+add_action( 'wp_enqueue_scripts', 'vemus_child_enqueue_styles', 999 );
 
 /**
  * Enqueue Alpine.js for Hybrid Optimization
