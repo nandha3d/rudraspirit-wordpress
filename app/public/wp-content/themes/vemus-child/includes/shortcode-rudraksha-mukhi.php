@@ -322,7 +322,7 @@ if ( ! function_exists( 'vemus_rudraksha_mukhi_shortcode' ) ) {
                             <!-- Vedic Beej Mantra Card (Clean English) -->
                             <div class="mantra-display-card">
                                 <span class="mantra-label">Vedic Beej Mantra (Chant 108 Times)</span>
-                                <div class="english-mantra-title" style="font-size: 17px; font-weight: 600; color: #d68019; letter-spacing: 0.5px; margin-top: 6px;" x-text="currentData.mantra_english"></div>
+                                <div class="english-mantra-title" style="font-size: 13px; font-weight: 500; color: #d68019; letter-spacing: 0.3px; margin-top: 6px;" x-text="currentData.mantra_english"></div>
                             </div>
 
                             <!-- Interactive 108 Counter -->
@@ -341,7 +341,7 @@ if ( ! function_exists( 'vemus_rudraksha_mukhi_shortcode' ) ) {
 
                                 <div class="japa-controls">
                                     <button type="button" class="japa-tap-btn tf-btn" @click="toggleAutoJapa()" :style="japaIsRunning ? 'background: #2b2b2b; color: #fff;' : ''">
-                                        <span x-text="japaIsRunning ? '⏸ Pause Automatic Chanting' : (japaCount >= 108 ? '🔄 Restart 108 Chants' : '▶ Start Automatic Chanting (1 by 1)')"></span>
+                                        <span x-text="japaIsRunning ? '⏸ Pause' : (japaCount >= 108 ? '🔄 Restart' : '▶ Start')"></span>
                                     </button>
                                     <button type="button" class="japa-manual-tap tf-btn" style="background: transparent; border: 1px solid rgba(214, 128, 25, 0.4); color: inherit; font-size: 13px; padding: 6px 14px;" @click="incrementJapa()" x-show="!japaIsRunning && japaCount < 108">
                                         <span>📿 Manual Tap +1</span>
@@ -444,7 +444,7 @@ if ( ! function_exists( 'vemus_rudraksha_mukhi_shortcode' ) ) {
                             } else {
                                 this.stopAutoJapa();
                             }
-                        }, 1200);
+                        }, 5000);
                     }
                 },
 
