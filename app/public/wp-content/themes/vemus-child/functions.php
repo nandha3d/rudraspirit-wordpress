@@ -316,6 +316,26 @@ function vemus_child_order_products_query( $query ) {
     }
 }
 
+add_action( 'init', 'vemus_child_sync_menu_order_once', 30 );
+function vemus_child_sync_menu_order_once() {
+    if ( get_option( 'vemus_child_menu_order_synced_v2' ) ) {
+        return;
+    }
+    if ( ! function_exists( 'wc_get_products' ) || ! class_exists( 'Vemus_Rudraksha_Data' ) ) {
+        return;
+    }
+    $products = wc_get_products( array( 'status' => 'publish', 'limit' => -1 ) );
+    if ( ! empty( $products ) ) {
+        foreach ( $products as $p ) {
+            $m = Vemus_Rudraksha_Data::get_mukhi_by_page_id( $p->get_id() );
+            if ( $m > 0 && intval( $p->get_menu_order() ) !== $m ) {
+                wp_update_post( array( 'ID' => $p->get_id(), 'menu_order' => $m ) );
+            }
+        }
+        update_option( 'vemus_child_menu_order_synced_v2', time() );
+    }
+}
+
 add_filter( 'the_posts', 'vemus_child_sort_rudraksha_products_by_mukhi', 20, 2 );
 function vemus_child_sort_rudraksha_products_by_mukhi( $posts, $query ) {
     if ( is_admin() && ! wp_doing_ajax() ) {

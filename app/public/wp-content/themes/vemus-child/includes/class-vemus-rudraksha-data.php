@@ -657,7 +657,7 @@ if ( ! class_exists( 'Vemus_Rudraksha_Data' ) ) {
                             $p_title = strtolower( $product->get_name() );
                             $p_slug  = strtolower( $product->get_slug() );
                             foreach ( $target_words as $w ) {
-                                if ( preg_match( '/\b' . $w . '\b.*mukhi|' . $w . '-mukhi/i', $p_title ) || preg_match( '/\b' . $w . '\b.*mukhi|' . $w . '-mukhi/i', $p_slug ) ) {
+                                if ( preg_match( '/(?<!\d)' . preg_quote( $w, '/' ) . '[- ]?mukhi/i', $p_title ) || preg_match( '/(?<!\d)' . preg_quote( $w, '/' ) . '[- ]?mukhi/i', $p_slug ) ) {
                                     $is_match = true;
                                     break;
                                 }
@@ -751,31 +751,31 @@ if ( ! class_exists( 'Vemus_Rudraksha_Data' ) ) {
                 }
             }
 
-            // Map of patterns for each Mukhi 1 to 21 + Gauri Shankar + Trijuti
+            // Map of patterns for each Mukhi ordered highest to lowest with negative lookbehind so 1-mukhi does not match inside 11-mukhi
             $patterns = array(
-                1  => '/\b(1|one|ek)\b.*mukhi|one-mukhi|1-mukhi|ek-mukhi/i',
-                2  => '/\b(2|two|do)\b.*mukhi|two-mukhi|2-mukhi|do-mukhi/i',
-                3  => '/\b(3|three|teen)\b.*mukhi|three-mukhi|3-mukhi|teen-mukhi/i',
-                4  => '/\b(4|four|chaar|char)\b.*mukhi|four-mukhi|4-mukhi|chaar-mukhi/i',
-                5  => '/\b(5|five|panch)\b.*mukhi|five-mukhi|5-mukhi|panch-mukhi/i',
-                6  => '/\b(6|six|cheh|chah)\b.*mukhi|six-mukhi|6-mukhi|cheh-mukhi/i',
-                7  => '/\b(7|seven|saat|sat)\b.*mukhi|seven-mukhi|7-mukhi|saat-mukhi/i',
-                8  => '/\b(8|eight|aath|ath)\b.*mukhi|eight-mukhi|8-mukhi|aath-mukhi/i',
-                9  => '/\b(9|nine|nau)\b.*mukhi|nine-mukhi|9-mukhi|nau-mukhi/i',
-                10 => '/\b(10|ten|das)\b.*mukhi|ten-mukhi|10-mukhi|das-mukhi/i',
-                11 => '/\b(11|eleven|gyarah|gyara)\b.*mukhi|eleven-mukhi|11-mukhi|gyarah-mukhi/i',
-                12 => '/\b(12|twelve|barah|bara)\b.*mukhi|twelve-mukhi|12-mukhi|barah-mukhi/i',
-                13 => '/\b(13|thirteen|terah|tera)\b.*mukhi|thirteen-mukhi|13-mukhi|terah-mukhi/i',
-                14 => '/\b(14|fourteen|chaudah|chauda)\b.*mukhi|fourteen-mukhi|14-mukhi|chaudah-mukhi/i',
-                15 => '/\b(15|fifteen|pandrah)\b.*mukhi|fifteen-mukhi|15-mukhi/i',
-                16 => '/\b(16|sixteen|solah)\b.*mukhi|sixteen-mukhi|16-mukhi/i',
-                17 => '/\b(17|seventeen|satrah)\b.*mukhi|seventeen-mukhi|17-mukhi/i',
-                18 => '/\b(18|eighteen|atharah)\b.*mukhi|eighteen-mukhi|18-mukhi/i',
-                19 => '/\b(19|nineteen|unnis)\b.*mukhi|nineteen-mukhi|19-mukhi/i',
-                20 => '/\b(20|twenty|bis)\b.*mukhi|twenty-mukhi|20-mukhi/i',
-                21 => '/\b(21|twenty-one|ikkis)\b.*mukhi|twenty-one-mukhi|21-mukhi/i',
-                22 => '/gauri[- ]?shankar/i',
                 23 => '/trijuti/i',
+                22 => '/gauri[- ]?shankar/i',
+                21 => '/(?<!\d)(?:21|twenty[- ]one|ikkis)[- ]?mukhi/i',
+                20 => '/(?<!\d)(?:20|twenty|bis)[- ]?mukhi/i',
+                19 => '/(?<!\d)(?:19|nineteen|unnis)[- ]?mukhi/i',
+                18 => '/(?<!\d)(?:18|eighteen|atharah)[- ]?mukhi/i',
+                17 => '/(?<!\d)(?:17|seventeen|satrah)[- ]?mukhi/i',
+                16 => '/(?<!\d)(?:16|sixteen|solah)[- ]?mukhi/i',
+                15 => '/(?<!\d)(?:15|fifteen|pandrah)[- ]?mukhi/i',
+                14 => '/(?<!\d)(?:14|fourteen|chaudah|chauda)[- ]?mukhi/i',
+                13 => '/(?<!\d)(?:13|thirteen|terah|tera)[- ]?mukhi/i',
+                12 => '/(?<!\d)(?:12|twelve|barah|bara)[- ]?mukhi/i',
+                11 => '/(?<!\d)(?:11|eleven|gyarah|gyara)[- ]?mukhi/i',
+                10 => '/(?<!\d)(?:10|ten|das)[- ]?mukhi/i',
+                9  => '/(?<!\d)(?:9|nine|nau)[- ]?mukhi/i',
+                8  => '/(?<!\d)(?:8|eight|aath|ath)[- ]?mukhi/i',
+                7  => '/(?<!\d)(?:7|seven|saat|sat)[- ]?mukhi/i',
+                6  => '/(?<!\d)(?:6|six|cheh|chah)[- ]?mukhi/i',
+                5  => '/(?<!\d)(?:5|five|panch)[- ]?mukhi/i',
+                4  => '/(?<!\d)(?:4|four|chaar|char)[- ]?mukhi/i',
+                3  => '/(?<!\d)(?:3|three|teen)[- ]?mukhi/i',
+                2  => '/(?<!\d)(?:2|two|do)[- ]?mukhi/i',
+                1  => '/(?<!\d)(?:1|one|ek)[- ]?mukhi/i',
             );
 
             foreach ( $search_strings as $text ) {
