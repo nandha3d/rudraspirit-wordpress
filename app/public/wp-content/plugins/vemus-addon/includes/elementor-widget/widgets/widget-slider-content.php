@@ -154,6 +154,18 @@ class Vemus_Slider_Content extends \Elementor\Widget_Base {
         );
 
 		$repeater->add_control(
+			'is_3d_slide',
+			[
+				'label' => esc_html__( 'Enable 3D Spiritual ThreeJS Hero', 'vemus-addon' ),
+				'type' => \Elementor\Controls_Manager::SWITCHER,
+				'label_on' => esc_html__( 'Yes', 'vemus-addon' ),
+				'label_off' => esc_html__( 'No', 'vemus-addon' ),
+				'return_value' => 'yes',
+				'default' => 'no',
+			]
+		);
+
+		$repeater->add_control(
 			'tagline',
 			[
 				'label' => esc_html__( 'Tagline / Subheading', 'vemus-addon' ),
@@ -795,7 +807,7 @@ class Vemus_Slider_Content extends \Elementor\Widget_Base {
                     data-delay="3000">
                     <div class="swiper-wrapper">
 
-                        <?php foreach ($settings['slider_list'] as $slider):
+                        <?php foreach ($settings['slider_list'] as $slide_index => $slider):
                             $image_url = \Elementor\Group_Control_Image_Size::get_attachment_image_src(
 								$slider['slider_image']['id'],
 								'image_size',
@@ -804,15 +816,19 @@ class Vemus_Slider_Content extends \Elementor\Widget_Base {
                             if ( empty($image_url) && !empty($slider['slider_image']['url']) ) {
                                 $image_url = $slider['slider_image']['url'];
                             }
+                            $is_3d = (!empty($slider['is_3d_slide']) && $slider['is_3d_slide'] === 'yes');
                             ?>	
-                            <div class="swiper-slide">
+                            <div class="swiper-slide <?php echo $is_3d ? 'is-3d-spiritual-slide' : ''; ?>" data-slide-index="<?php echo esc_attr($slide_index); ?>">
                                 <div class="slider_wrap elementor-repeater-item-<?php echo esc_attr($slider['_id']);?>_content">
 
                                     <div class="sld-image2">
+                                        <?php if ( $is_3d ) : ?>
+                                            <div id="spiritual-threejs-container-<?php echo esc_attr($slider['_id'] ?? $slide_index); ?>" class="spiritual-threejs-hero-canvas" data-slide-id="<?php echo esc_attr($slider['_id'] ?? $slide_index); ?>" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 5; overflow: hidden; pointer-events: auto;"></div>
+                                        <?php endif; ?>
                                         <?php if ( $image_url ) : ?>
-                                            <img src="<?php echo esc_url( $image_url ); ?>" alt="Image">
+                                            <img src="<?php echo esc_url( $image_url ); ?>" alt="Image" style="<?php echo $is_3d ? 'opacity: 0.18 !important;' : ''; ?>">
                                         <?php else: ?>
-                                            <img src="<?php echo TF_PLUGIN_URL."includes/elementor-widget/assets/images/slider-1.jpg"; ?>" alt="Image">
+                                            <img src="<?php echo TF_PLUGIN_URL."includes/elementor-widget/assets/images/slider-1.jpg"; ?>" alt="Image" style="<?php echo $is_3d ? 'opacity: 0.18 !important;' : ''; ?>">
                                         <?php endif; ?>
                                     </div>
 

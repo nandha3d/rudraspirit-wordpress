@@ -142,6 +142,18 @@ class Vemus_Slider extends \Elementor\Widget_Base {
         );
 
 		$repeater->add_control(
+			'is_3d_slide',
+			[
+				'label' => esc_html__( 'Enable 3D Spiritual ThreeJS Hero', 'vemus-addon' ),
+				'type' => \Elementor\Controls_Manager::SWITCHER,
+				'label_on' => esc_html__( 'Yes', 'vemus-addon' ),
+				'label_off' => esc_html__( 'No', 'vemus-addon' ),
+				'return_value' => 'yes',
+				'default' => 'no',
+			]
+		);
+
+		$repeater->add_control(
 			'title',
 			[
 				'label' => esc_html__( 'Title', 'vemus-addon' ),

@@ -82,6 +82,10 @@ function vemus_child_enqueue_styles() {
     // Enqueue Alpine Wishlist Logic
     wp_enqueue_script( 'vemus-child-wishlist', get_stylesheet_directory_uri() . '/assets/js/wishlist.js', array( 'jquery' ), '1.0.0', true );
     
+    // Enqueue Interactive Three.js 3D Spiritual Hero Section script
+    $three_version = file_exists( get_stylesheet_directory() . '/js/spiritual-hero-3d.js' ) ? filemtime( get_stylesheet_directory() . '/js/spiritual-hero-3d.js' ) : time();
+    wp_enqueue_script( 'vemus-child-spiritual-3d-hero', get_stylesheet_directory_uri() . '/js/spiritual-hero-3d.js', array( 'jquery' ), $three_version, true );
+    
     // Localize script for AJAX
     wp_localize_script( 'vemus-child-wishlist', 'vemus_child_params', array(
         'ajax_url' => admin_url( 'admin-ajax.php' )
@@ -563,5 +567,58 @@ add_filter( 'elementor/widget/render_content', function( $widget_content, $widge
     return $widget_content;
 }, 999, 2 );
 
+/**
+ * Hide top default checkout coupon notice so coupon is only inside the right order box under subtotal
+ */
+add_action( 'woocommerce_before_checkout_form', function() {
+    remove_action( 'woocommerce_before_checkout_form', 'woocommerce_checkout_coupon', 10 );
+}, 1 );
 
+/**
+ * Inline script to sync sidebar coupon inputs on cart & checkout pages with WooCommerce native coupon handlers
+ */
+add_action( 'wp_footer', function() {
+    ?>
+    <script type="text/javascript">
+    document.addEventListener('DOMContentLoaded', function() {
+        // Checkout inline coupon
+        document.body.addEventListener('click', function(e) {
+            if (e.target && e.target.classList.contains('apply-checkout-coupon-btn')) {
+                e.preventDefault();
+                var codeInput = document.getElementById('checkout_sidebar_coupon_code');
+                var code = codeInput ? codeInput.value.trim() : '';
+                if (!code) {
+                    alert('Please enter a coupon code');
+                    return;
+                }
+                var nativeInput = document.querySelector('form.checkout_coupon input[name="coupon_code"]');
+                var nativeForm = document.querySelector('form.checkout_coupon');
+                if (nativeInput && nativeForm) {
+                    nativeInput.value = code;
+                    // Trigger submit or button click
+                    var applyBtn = nativeForm.querySelector('button[name="apply_coupon"]');
+                    if (applyBtn) {
+                        applyBtn.click();
+                    } else {
+                        if (typeof jQuery !== 'undefined') {
+                            jQuery('form.checkout_coupon').submit();
+                        } else {
+                            nativeForm.submit();
+                        }
+                    }
+                }
+            }
+        });
 
+        // Also allow pressing Enter in checkout sidebar coupon input
+        document.body.addEventListener('keydown', function(e) {
+            if (e.target && e.target.id === 'checkout_sidebar_coupon_code' && e.key === 'Enter') {
+                e.preventDefault();
+                var btn = document.querySelector('.apply-checkout-coupon-btn');
+                if (btn) btn.click();
+            }
+        });
+    });
+    </script>
+    <?php
+}, 99 );
