@@ -570,9 +570,10 @@ add_filter( 'elementor/widget/render_content', function( $widget_content, $widge
 /**
  * Hide top default checkout coupon notice so coupon is only inside the right order box under subtotal
  */
-add_action( 'woocommerce_before_checkout_form', function() {
+add_action( 'wp', function() {
     remove_action( 'woocommerce_before_checkout_form', 'woocommerce_checkout_coupon', 10 );
-}, 1 );
+}, 10 );
+add_filter( 'woocommerce_checkout_coupon_message', '__return_empty_string' );
 
 /**
  * Inline script to sync sidebar coupon inputs on cart & checkout pages with WooCommerce native coupon handlers
