@@ -2904,14 +2904,25 @@ select.type-currencies,
  * LIVE & LOCAL LAYOUT AND SPACING FIXES
  * 1. Reduce Top Gap below Header & Align Product Columns to Same Line
  * ==================================================================== */
-#themesflat-content.page-single-no-thumb,
+/* Product pages only. `.page-single-no-thumb` is added by the theme to every
+   page without a featured image — including the home page — so it must stay
+   qualified, otherwise this product spacing leaks into the home page layout. */
+.single-product #themesflat-content.page-single-no-thumb,
 .single-product #themesflat-content,
 .single-product #main-content,
 .single-product .tf-main-product,
-.elementor-9187 ~ #themesflat-content,
-.elementor-9187 + #themesflat-content {
+body.single-product .elementor-9187 ~ #themesflat-content,
+body.single-product .elementor-9187 + #themesflat-content {
     padding-top: 15px !important;
     margin-top: 0px !important;
+}
+
+/* Home page: hero banner connects straight to the top navigation. */
+body.home #themesflat-content,
+body.home #themesflat-content.page-single-no-thumb,
+body.home #main-content {
+    padding-top: 0 !important;
+    margin-top: 0 !important;
 }
 
 /* Make both left image card and right title start from exact same line alignment */
@@ -3153,13 +3164,22 @@ select.type-currencies,
 
 /* =========================================
    Spiritual 3D Three.js Hero Section Styling
+
+   The 3D treatment is applied ONLY once Three.js has really rendered a canvas
+   (data-three-rendered="true"). Until then — and permanently, if the library is
+   blocked or WebGL is unavailable — the slide keeps the standard full-opacity
+   banner image, so the home page hero can never end up as an empty dark box.
    ========================================= */
-.is-3d-spiritual-slide .sld-image2,
-.is-3d-spiritual-slide .sld-image {
+.tf-slideshow .is-3d-spiritual-slide .sld-image2:has(.spiritual-threejs-hero-canvas[data-three-rendered="true"]),
+.tf-slideshow .is-3d-spiritual-slide .sld-image:has(.spiritual-threejs-hero-canvas[data-three-rendered="true"]) {
     background: radial-gradient(circle at 70% 50%, #1c140a 0%, #0d0d0d 65%, #050505 100%) !important;
 }
 
-.spiritual-threejs-hero-canvas {
+.tf-slideshow .is-3d-spiritual-slide .spiritual-threejs-hero-canvas[data-three-rendered="true"] ~ img {
+    opacity: 0.18 !important;
+}
+
+.tf-slideshow .spiritual-threejs-hero-canvas {
     position: absolute !important;
     top: 0 !important;
     left: 0 !important;
@@ -3172,11 +3192,18 @@ select.type-currencies,
     display: block !important;
 }
 
-.spiritual-threejs-hero-canvas:active {
+/* An empty container (library never loaded / WebGL failed) must not sit on top
+   of the banner image and swallow clicks on the hero call-to-action. */
+.tf-slideshow .spiritual-threejs-hero-canvas:empty {
+    display: none !important;
+    pointer-events: none !important;
+}
+
+.tf-slideshow .spiritual-threejs-hero-canvas:active {
     cursor: grabbing !important;
 }
 
-.spiritual-threejs-hero-canvas canvas {
+.tf-slideshow .spiritual-threejs-hero-canvas canvas {
     display: block !important;
     width: 100% !important;
     height: 100% !important;
@@ -3213,11 +3240,20 @@ select.type-currencies,
 
 /* =========================================
    Terms and Conditions Text Visibility Fix
+   Scoped to cart / checkout / account pages only — these rules must never
+   restyle checkboxes and labels in home page or footer forms (newsletter,
+   filters, consent boxes).
    ========================================= */
-.checkbox-wrap label[for="agree-term"],
-.checkbox-wrap label[for="terms"],
-label.woocommerce-form__label-for-checkbox,
-label.woocommerce-form__label-for-checkbox span,
+.woocommerce-cart .checkbox-wrap label[for="agree-term"],
+.woocommerce-checkout .checkbox-wrap label[for="agree-term"],
+.woocommerce-cart .checkbox-wrap label[for="terms"],
+.woocommerce-checkout .checkbox-wrap label[for="terms"],
+.woocommerce-cart label.woocommerce-form__label-for-checkbox,
+.woocommerce-checkout label.woocommerce-form__label-for-checkbox,
+.woocommerce-account label.woocommerce-form__label-for-checkbox,
+.woocommerce-cart label.woocommerce-form__label-for-checkbox span,
+.woocommerce-checkout label.woocommerce-form__label-for-checkbox span,
+.woocommerce-account label.woocommerce-form__label-for-checkbox span,
 .woocommerce-terms-and-conditions-checkbox-text {
     color: #191410 !important;
     font-size: 14px !important;
@@ -3231,14 +3267,18 @@ label.woocommerce-form__label-for-checkbox span,
     cursor: pointer !important;
 }
 
-.checkbox-wrap input[type="checkbox"] + label::before,
-.checkbox-wrap input[type="checkbox"] + label::after {
+.woocommerce-cart .checkbox-wrap input[type="checkbox"] + label::before,
+.woocommerce-checkout .checkbox-wrap input[type="checkbox"] + label::before,
+.woocommerce-cart .checkbox-wrap input[type="checkbox"] + label::after,
+.woocommerce-checkout .checkbox-wrap input[type="checkbox"] + label::after {
     z-index: 1 !important;
 }
 
 /* Ensure checkmark accent contrast */
-.checkbox-wrap input[type="checkbox"],
-input[type="checkbox"].tf-check {
+.woocommerce-cart .checkbox-wrap input[type="checkbox"],
+.woocommerce-checkout .checkbox-wrap input[type="checkbox"],
+.woocommerce-cart input[type="checkbox"].tf-check,
+.woocommerce-checkout input[type="checkbox"].tf-check {
     width: 18px !important;
     height: 18px !important;
     cursor: pointer !important;

@@ -823,12 +823,12 @@ class Vemus_Slider_Content extends \Elementor\Widget_Base {
 
                                     <div class="sld-image2">
                                         <?php if ( $is_3d ) : ?>
-                                            <div id="spiritual-threejs-container-<?php echo esc_attr($slider['_id'] ?? $slide_index); ?>" class="spiritual-threejs-hero-canvas" data-slide-id="<?php echo esc_attr($slider['_id'] ?? $slide_index); ?>" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 5; overflow: hidden; pointer-events: auto;"></div>
+                                            <div id="spiritual-threejs-container-<?php echo esc_attr($slider['_id'] ?? $slide_index); ?>" class="spiritual-threejs-hero-canvas" data-slide-id="<?php echo esc_attr($slider['_id'] ?? $slide_index); ?>"></div>
                                         <?php endif; ?>
                                         <?php if ( $image_url ) : ?>
-                                            <img src="<?php echo esc_url( $image_url ); ?>" alt="Image" style="<?php echo $is_3d ? 'opacity: 0.18 !important;' : ''; ?>">
+                                            <img src="<?php echo esc_url( $image_url ); ?>" alt="Image">
                                         <?php else: ?>
-                                            <img src="<?php echo TF_PLUGIN_URL."includes/elementor-widget/assets/images/slider-1.jpg"; ?>" alt="Image" style="<?php echo $is_3d ? 'opacity: 0.18 !important;' : ''; ?>">
+                                            <img src="<?php echo TF_PLUGIN_URL."includes/elementor-widget/assets/images/slider-1.jpg"; ?>" alt="Image">
                                         <?php endif; ?>
                                     </div>
 

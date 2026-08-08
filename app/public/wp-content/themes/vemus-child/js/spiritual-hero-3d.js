@@ -5,32 +5,68 @@
 (function($) {
     "use strict";
 
-    // Guarantee Three.js is loaded
+    var threeRequested = false;
+
+    // Only pull the Three.js library when a 3D slide actually exists on the page.
+    // Pages without one (home, shop, cart, checkout...) must not pay for the CDN request.
     function ensureThreeJsAndInit() {
-        if (typeof THREE === 'undefined') {
-            var script = document.createElement('script');
-            script.src = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';
-            script.onload = function() {
-                initAllSpiritualHeroes();
-            };
-            document.head.appendChild(script);
-        } else {
+        if (!document.querySelector('.spiritual-threejs-hero-canvas')) return;
+
+        if (typeof THREE !== 'undefined') {
             initAllSpiritualHeroes();
+            return;
         }
+
+        if (threeRequested) return;
+        threeRequested = true;
+
+        var script = document.createElement('script');
+        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';
+        script.onload = function() {
+            initAllSpiritualHeroes();
+        };
+        script.onerror = function() {
+            // Library unreachable: leave the slide on its normal banner image.
+            threeRequested = false;
+        };
+        document.head.appendChild(script);
     }
 
     function initAllSpiritualHeroes() {
+        if (typeof THREE === 'undefined') return;
+
         $('.spiritual-threejs-hero-canvas').each(function() {
             var container = this;
             if (container.dataset.threeInitialized === 'true') return;
             container.dataset.threeInitialized = 'true';
-            initSpiritualScene(container);
+            try {
+                initSpiritualScene(container);
+                // Flags the CSS that the canvas really rendered, so the slide
+                // switches from the flat banner image to the 3D presentation.
+                container.dataset.threeRendered = 'true';
+            } catch (e) {
+                // WebGL unavailable or context creation failed: fall back to the banner image.
+                container.dataset.threeInitialized = 'false';
+                $(container).empty();
+            }
         });
     }
 
+    // The container is hidden by CSS until it holds a canvas, so it measures 0x0
+    // on first run. Fall back to the slide image wrapper, which is the box the
+    // canvas has to fill.
+    function measure(container) {
+        var box = container.parentElement || container;
+        return {
+            width: container.clientWidth || box.clientWidth || window.innerWidth,
+            height: container.clientHeight || box.clientHeight || window.innerHeight
+        };
+    }
+
     function initSpiritualScene(container) {
-        var width = container.clientWidth || window.innerWidth;
-        var height = container.clientHeight || window.innerHeight;
+        var size = measure(container);
+        var width = size.width;
+        var height = size.height;
 
         var scene = new THREE.Scene();
         var camera = new THREE.PerspectiveCamera(55, width / height, 0.1, 1000);
@@ -161,8 +197,9 @@
 
         // --- RESIZE HANDLING ---
         function onWindowResize() {
-            width = container.clientWidth || window.innerWidth;
-            height = container.clientHeight || window.innerHeight;
+            var next = measure(container);
+            width = next.width;
+            height = next.height;
             windowHalfX = window.innerWidth / 2;
             windowHalfY = window.innerHeight / 2;
             camera.aspect = width / height;
