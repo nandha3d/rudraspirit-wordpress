@@ -1,0 +1,95 @@
+name: Pull From Live (server -> repo)
+
+# Mirrors the LIVE vemus-child theme and vemus-addon plugin back down into this
+# repository, so the repo finally matches what actually runs on the server.
+#
+# Why this exists: the repo held the pristine vendor copy of vemus-addon while
+# the server ran a patched copy. Deploying the repo silently reverted those
+# patches and took the site down. Pulling first makes the live patches visible
+# and version-controlled before anything is ever pushed up again.
+#
+# Safe by construction: it pushes to a review branch, never to master, so the
+# deploy workflow (which only fires on main/master) cannot be triggered by it.
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Branch to publish the pulled server state to (never master)'
+        required: true
+        default: 'live-baseline'
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  pull:
+    name: Mirror live theme and addon into the repo
+    runs-on: ubuntu-latest
+    env:
+      SSH_HOST: ${{ secrets.SSH_HOST || '217.21.74.44' }}
+      SSH_PORT: ${{ secrets.SSH_PORT || '65002' }}
+      SSH_USER: ${{ secrets.SSH_USER || 'u362580417' }}
+      REMOTE_PATH: "/home/u362580417/domains/rudraspirit.com/public_html/app/public"
+      BRANCH: ${{ inputs.branch }}
+
+    steps:
+      - name: Guard against targeting master
+        run: |
+          if [ "$BRANCH" = "master" ] || [ "$BRANCH" = "main" ]; then
+            echo "Refusing to publish pulled server state directly to $BRANCH."
+            echo "That would let the deploy workflow immediately push it back up."
+            exit 1
+          fi
+
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup SSH Authentication
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Pull vemus-child and vemus-addon down from the server
+        run: |
+          set -e
+          for pair in \
+            "wp-content/themes/vemus-child:app/public/wp-content/themes/vemus-child" \
+            "wp-content/plugins/vemus-addon:app/public/wp-content/plugins/vemus-addon"; do
+            remote="${pair%%:*}"; local="${pair##*:}"
+            echo "== pulling $remote =="
+            mkdir -p "$local"
+            timeout 600 rsync -az --delete \
+              -e "ssh -p $SSH_PORT -o StrictHostKeyChecking=accept-new" \
+              --exclude='.git' --exclude='node_modules' --exclude='*.log' --exclude='.DS_Store' \
+              "$SSH_USER@$SSH_HOST:$REMOTE_PATH/$remote/" "$local/"
+          done
+
+      - name: What the server has that the repo did not
+        run: |
+          git add -A app/public/wp-content/themes/vemus-child app/public/wp-content/plugins/vemus-addon
+          echo "=== changed files (live vs repo) ==="
+          git diff --cached --stat | tail -40
+          echo
+          echo "=== the guard that broke the site, as it exists on the server ==="
+          sed -n '505,525p' app/public/wp-content/plugins/vemus-addon/includes/elementor-widget/tf-header-footer/index.php || true
+
+      - name: Publish to review branch
+        run: |
+          git config user.name "Claude"
+          git config user.email "noreply@anthropic.com"
+          git checkout -B "$BRANCH"
+          git add -A app/public/wp-content/themes/vemus-child app/public/wp-content/plugins/vemus-addon
+          if git diff --cached --quiet; then
+            echo "Repo already matches live - nothing to commit."
+            exit 0
+          fi
+          git commit \
+            -m "Mirror live vemus-child and vemus-addon into the repo" \
+            -m "Pulled straight off rudraspirit.com after the 2026-08-08 16:24 restore, so the repository records the code that actually runs in production." \
+            -m "The repo previously carried the pristine vendor copy of vemus-addon; deploying it reverted live-only patches and took the site down. This is the baseline any future change must be built on top of."
+          git push -u origin "$BRANCH" --force-with-lease
+          echo "Published to branch: $BRANCH"
