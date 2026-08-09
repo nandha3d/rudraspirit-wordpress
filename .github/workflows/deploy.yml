@@ -26,7 +26,10 @@ jobs:
       SSH_HOST: ${{ secrets.SSH_HOST || '217.21.74.44' }}
       SSH_PORT: ${{ secrets.SSH_PORT || '65002' }}
       SSH_USER: ${{ secrets.SSH_USER || 'u362580417' }}
-      REMOTE_PATH: "/home/u362580417/domains/rudraspirit.com/public_html"
+      # WordPress root on the server. wp-content lives under app/public, matching
+      # REMOTE_WP in deploy.config.sh — pointing at public_html makes every rsync
+      # fail with "mkdir wp-content/themes/vemus-child: No such file or directory".
+      REMOTE_PATH: "/home/u362580417/domains/rudraspirit.com/public_html/app/public"
 
     steps:
       - name: Checkout Code
@@ -42,7 +45,9 @@ jobs:
       - name: Verify Remote Server Connection & WP-CLI
         run: |
           echo "Verifying connection to $SSH_USER@$SSH_HOST:$SSH_PORT..."
-          ssh -o StrictHostKeyChecking=accept-new -p $SSH_PORT $SSH_USER@$SSH_HOST "export PATH=/opt/alt/php83/usr/bin:\$PATH; cd $REMOTE_PATH && wp --version"
+          # `wp core version` (unlike `wp --version`) only succeeds inside a real
+          # WordPress root, so this catches a wrong REMOTE_PATH before rsync runs.
+          ssh -o StrictHostKeyChecking=accept-new -p $SSH_PORT $SSH_USER@$SSH_HOST "export PATH=/opt/alt/php83/usr/bin:\$PATH; cd $REMOTE_PATH && wp core version && test -d wp-content/themes"
 
       - name: Deploy Custom Code (Theme & Plugins)
         if: ${{ github.event_name == 'push' || github.event.inputs.deploy_mode == 'code_only' }}

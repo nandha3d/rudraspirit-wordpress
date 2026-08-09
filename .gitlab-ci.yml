@@ -3,7 +3,9 @@ stages:
   - deploy
 
 variables:
-  REMOTE_PATH: "/home/u362580417/domains/rudraspirit.com/public_html"
+  # WordPress root on the server: wp-content lives under app/public, matching
+  # REMOTE_WP in deploy.config.sh.
+  REMOTE_PATH: "/home/u362580417/domains/rudraspirit.com/public_html/app/public"
 
 php_syntax_check:
   stage: lint
