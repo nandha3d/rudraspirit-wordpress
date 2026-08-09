@@ -1,74 +1,86 @@
 name: Remote Diagnose (read-only)
 
-# Read-only inspection of the live server. Writes nothing, activates nothing.
-# Output is deliberately compact: no page dumps, only the facts needed to tell
-# why the front end renders unstyled.
+# Read-only inspection. Writes nothing.
+#
+# Current question: curl sees 13 stylesheets that all return 200, but a real
+# browser applies none of them. HTML parses (headings and images render), CSS
+# does not apply. curl cannot see why, because it neither parses HTML nor
+# enforces MIME rules. These checks target the causes that behave exactly that
+# way: wrong Content-Type under nosniff, stylesheet links stranded outside
+# <head> by malformed markup, output emitted before <!DOCTYPE>, and responses
+# that differ by User-Agent.
 
 on:
   workflow_dispatch:
 
 jobs:
   diagnose:
-    name: Inspect rudraspirit.com
+    name: Why does the browser ignore the CSS
     runs-on: ubuntu-latest
     env:
-      SSH_HOST: ${{ secrets.SSH_HOST || '217.21.74.44' }}
-      SSH_PORT: ${{ secrets.SSH_PORT || '65002' }}
-      SSH_USER: ${{ secrets.SSH_USER || 'u362580417' }}
-      REMOTE_PATH: "/home/u362580417/domains/rudraspirit.com/public_html/app/public"
+      MOBILE_UA: "Mozilla/5.0 (Linux; Android 13; SM-G991B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Mobile Safari/537.36"
 
     steps:
-      - name: Setup SSH Authentication
-        uses: webfactory/ssh-agent@v0.9.0
-        with:
-          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
-
-      - name: Backups available for restore
-        run: |
-          timeout 120 ssh -o StrictHostKeyChecking=accept-new -p $SSH_PORT $SSH_USER@$SSH_HOST '
-            echo "--- ~/deploy-backups ---"; ls -1 ~/deploy-backups/ 2>/dev/null | tail -20 || echo "NONE"
-            echo "--- newest backup contents ---"
-            b=$(ls -1dt ~/deploy-backups/*/ 2>/dev/null | head -1)
-            if [ -n "$b" ]; then echo "newest: $b"; ls -la "$b" 2>/dev/null | head -15; else echo "NONE"; fi
-          ' || echo "STEP FAILED"
-
-      - name: Active plugins
-        run: |
-          timeout 150 ssh -p $SSH_PORT -o StrictHostKeyChecking=accept-new $SSH_USER@$SSH_HOST "
-            export PATH=/opt/alt/php83/usr/bin:\$PATH; cd $REMOTE_PATH
-            timeout 90 wp plugin list --status=active --field=name 2>&1 | tr '\n' ' '
-            echo; echo '--- theme ---'
-            timeout 60 wp theme list --status=active --field=name 2>&1 | tr '\n' ' '
-          " || echo "STEP FAILED"
-
-      - name: Stylesheets the home page actually links
-        run: |
-          BODY=$(mktemp)
-          code=$(curl -s -o "$BODY" -w '%{http_code}' https://rudraspirit.com/)
-          echo "HTTP $code, $(wc -c < "$BODY") bytes"
-          echo "--- stylesheet hrefs ---"
-          grep -o -i "<link[^>]*rel=['\"]stylesheet['\"][^>]*>" "$BODY" \
-            | grep -o "href=['\"][^'\"]*['\"]" | sed "s/href=//; s/['\"]//g" | sed 's/?ver=.*//' | sort -u
-          echo "--- counts ---"
-          echo "stylesheet links: $(grep -c -i "rel=['\"]stylesheet['\"]" "$BODY")"
-          echo "vemus theme css refs: $(grep -c 'themes/vemus' "$BODY")"
-          echo "elementor css refs: $(grep -c 'elementor' "$BODY")"
-          echo "leaking shortcodes: $(grep -o '\[[a-z0-9_-]\+[^]]*\]' "$BODY" | grep -iE 'form|gallery|shortcode' | head -3)"
-
-      - name: Can the browser fetch the theme stylesheets
+      - name: Response headers for the theme stylesheets
         run: |
           for u in \
-            "https://rudraspirit.com/wp-content/themes/vemus/style.css" \
             "https://rudraspirit.com/wp-content/themes/vemus-child/style.css" \
-            "https://rudraspirit.com/wp-content/themes/vemus/assets/css/app.css"; do
-            echo "$(curl -s -o /dev/null -w '%{http_code} %{size_download}b' "$u")  $u"
+            "https://rudraspirit.com/wp-content/themes/vemus/assets/css/vemus-main.css"; do
+            echo "=== $u ==="
+            curl -sI "$u" | grep -iE 'HTTP/|content-type|content-encoding|content-length|x-content-type-options|cf-|server|location' || true
+            echo
           done
 
-      - name: Theme stylesheet permissions on disk
+      - name: First bytes of the document (output before DOCTYPE, BOM)
         run: |
-          timeout 120 ssh -p $SSH_PORT -o StrictHostKeyChecking=accept-new $SSH_USER@$SSH_HOST "
-            cd $REMOTE_PATH/wp-content/themes
-            ls -la vemus-child/style.css vemus/style.css 2>&1
-            echo '--- dir perms ---'
-            ls -ld vemus vemus-child 2>&1
-          " || echo "STEP FAILED"
+          curl -s https://rudraspirit.com/ | head -c 300 | od -c | head -12
+
+      - name: Are the stylesheet links actually inside head
+        run: |
+          BODY=$(mktemp)
+          curl -s https://rudraspirit.com/ -o "$BODY"
+          python3 - "$BODY" <<'PY'
+          import sys, re
+          h = open(sys.argv[1], encoding='utf-8', errors='replace').read()
+          def at(p):
+              i = h.lower().find(p)
+              return i if i >= 0 else None
+          print("doctype at:", at('<!doctype'))
+          print("<head> at :", at('<head'))
+          print("</head> at:", at('</head>'))
+          print("<body> at :", at('<body'))
+          links = [m.start() for m in re.finditer(r"<link[^>]*stylesheet", h, re.I)]
+          print("stylesheet link offsets:", links[:20])
+          eh = at('</head>')
+          if eh is not None and links:
+              inside = [o for o in links if o < eh]
+              print(f"links inside head: {len(inside)} / {len(links)}")
+          # unbalanced structures that strand the rest of head
+          print("unclosed <!-- count:", h.count('<!--') - h.count('-->'))
+          print("<script open:", len(re.findall(r'<script\b', h, re.I)),
+                " </script> close:", len(re.findall(r'</script>', h, re.I)))
+          print("<style open:", len(re.findall(r'<style\b', h, re.I)),
+                " </style> close:", len(re.findall(r'</style>', h, re.I)))
+          PY
+
+      - name: Does the response differ for a mobile browser
+        run: |
+          for ua in "curl-default" "$MOBILE_UA"; do
+            if [ "$ua" = "curl-default" ]; then
+              out=$(curl -s https://rudraspirit.com/)
+            else
+              out=$(curl -s -A "$ua" https://rudraspirit.com/)
+            fi
+            echo "UA=${ua:0:40}  bytes=$(printf '%s' "$out" | wc -c)  stylesheets=$(printf '%s' "$out" | grep -c -i 'rel=.stylesheet.')"
+          done
+
+      - name: Fetch the child stylesheet as a browser would
+        run: |
+          echo "--- with Referer and Accept, mobile UA ---"
+          curl -s -o /tmp/css -w 'http=%{http_code} type=%{content_type} size=%{size_download}\n' \
+            -A "$MOBILE_UA" \
+            -H "Accept: text/css,*/*;q=0.1" \
+            -H "Referer: https://rudraspirit.com/" \
+            "https://rudraspirit.com/wp-content/themes/vemus-child/style.css"
+          echo "--- first 120 chars actually returned ---"
+          head -c 120 /tmp/css; echo
