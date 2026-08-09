@@ -487,11 +487,17 @@ function tf_override_footer() {
 }
 
 function get_header_content() {
+    if ( ! class_exists( '\Elementor\Plugin' ) ) {
+        return;
+    }
     $tf_get_header_id = tf_get_header_id();
     echo \Elementor\Plugin::instance()->frontend->get_builder_content_for_display($tf_get_header_id);
 }
 
 function get_footer_content() {
+    if ( ! class_exists( '\Elementor\Plugin' ) ) {
+        return;
+    }
     $tf_get_footer_id = tf_get_footer_id();
     echo \Elementor\Plugin::instance()->frontend->get_builder_content_for_display($tf_get_footer_id);
 }
@@ -513,10 +519,10 @@ function tf_render_header() {
 function tf_render_footer() {
     $class_bt = '';
 
-    if ( is_product() ) {
+    if ( function_exists( 'is_product' ) && is_product() ) {
         global $product;
 
-        if ( ! $product instanceof WC_Product ) {
+        if ( ! $product instanceof WC_Product && function_exists( 'wc_get_product' ) ) {
             $product = wc_get_product( get_the_ID() );
         }
 

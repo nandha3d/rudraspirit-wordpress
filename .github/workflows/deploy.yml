@@ -80,9 +80,25 @@ jobs:
       - name: Post-Deployment Health Check
         run: |
           echo "Testing live HTTP response..."
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://rudraspirit.com/)
+          BODY=$(mktemp)
+          STATUS=$(curl -s -o "$BODY" -w "%{http_code}" https://rudraspirit.com/)
           if [ "$STATUS" -ne 200 ]; then
             echo "ERROR: Live site returned HTTP $STATUS instead of 200 after deployment!"
             exit 1
           fi
-          echo "SUCCESS: Live site is online and responding with HTTP 200 OK!"
+
+          # WordPress serves PHP fatals inside a 200 response, so status alone is
+          # not proof the site renders. Fail on error output in the page body too.
+          if grep -qiE 'Fatal error|Uncaught (Error|Exception)|Parse error' "$BODY"; then
+            echo "ERROR: Live home page returned HTTP 200 but contains a PHP fatal error:"
+            grep -ioE '.{0,120}(Fatal error|Uncaught (Error|Exception)|Parse error).{0,240}' "$BODY" | head -5
+            exit 1
+          fi
+
+          # A healthy page must actually contain the front-end shell.
+          if ! grep -qi '</html>' "$BODY"; then
+            echo "ERROR: Live home page response is truncated - no closing </html> tag."
+            tail -c 600 "$BODY"
+            exit 1
+          fi
+          echo "SUCCESS: Live site is online, HTTP 200, no PHP errors in the home page."
