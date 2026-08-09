@@ -1,8 +1,8 @@
 name: Remote Diagnose (read-only)
 
-# Read-only inspection of the live server. Runs nothing that writes, deletes,
-# activates or deactivates anything - it only reports state so a fix can be
-# based on facts instead of guesswork.
+# Read-only inspection of the live server. Writes nothing, activates nothing.
+# Output is deliberately compact: no page dumps, only the facts needed to tell
+# why the front end renders unstyled.
 
 on:
   workflow_dispatch:
@@ -18,54 +18,57 @@ jobs:
       REMOTE_PATH: "/home/u362580417/domains/rudraspirit.com/public_html/app/public"
 
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
       - name: Setup SSH Authentication
         uses: webfactory/ssh-agent@v0.9.0
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
-      - name: Available backups on the server
+      - name: Backups available for restore
         run: |
           timeout 120 ssh -o StrictHostKeyChecking=accept-new -p $SSH_PORT $SSH_USER@$SSH_HOST '
-            echo "=== ~/deploy-backups ==="; ls -la ~/deploy-backups/ 2>/dev/null | tail -30 || echo "(none)"
-            echo; echo "=== wp-content.tar.gz candidates in home ==="
-            ls -la ~/*.tar.gz ~/backups/*.tar.gz 2>/dev/null || echo "(none)"
-          ' || echo "step failed, continuing"
+            echo "--- ~/deploy-backups ---"; ls -1 ~/deploy-backups/ 2>/dev/null | tail -20 || echo "NONE"
+            echo "--- newest backup contents ---"
+            b=$(ls -1dt ~/deploy-backups/*/ 2>/dev/null | head -1)
+            if [ -n "$b" ]; then echo "newest: $b"; ls -la "$b" 2>/dev/null | head -15; else echo "NONE"; fi
+          ' || echo "STEP FAILED"
 
-      - name: Active plugins and theme
+      - name: Active plugins
         run: |
-          timeout 180 ssh -p $SSH_PORT -o StrictHostKeyChecking=accept-new $SSH_USER@$SSH_HOST "
+          timeout 150 ssh -p $SSH_PORT -o StrictHostKeyChecking=accept-new $SSH_USER@$SSH_HOST "
             export PATH=/opt/alt/php83/usr/bin:\$PATH; cd $REMOTE_PATH
-            echo '=== active plugins ==='; timeout 90 wp plugin list --status=active --fields=name,status,version 2>&1 | head -40
-            echo; echo '=== theme ==='; timeout 60 wp theme list --fields=name,status,version 2>&1 | head -20
-          " || echo "step failed, continuing"
+            timeout 90 wp plugin list --status=active --field=name 2>&1 | tr '\n' ' '
+            echo; echo '--- theme ---'
+            timeout 60 wp theme list --status=active --field=name 2>&1 | tr '\n' ' '
+          " || echo "STEP FAILED"
 
-      - name: Rendered home page shape
+      - name: Stylesheets the home page actually links
         run: |
           BODY=$(mktemp)
-          curl -s -o "$BODY" https://rudraspirit.com/ || true
-          echo "bytes: $(wc -c < "$BODY")"
-          echo "stylesheet <link> tags: $(grep -o -i '<link[^>]*stylesheet[^>]*>' "$BODY" | wc -l)"
-          echo "script tags: $(grep -o -i '<script' "$BODY" | wc -l)"
-          echo "wp-content asset refs: $(grep -o 'wp-content/[^\"'\'' ]*' "$BODY" | wc -l)"
-          echo "raw shortcodes leaking: $(grep -o '\[[a-z0-9_-]*form[^]]*\]' "$BODY" | head -5)"
-          echo; echo "=== first 40 lines of <head> ==="
-          sed -n '1,40p' "$BODY"
+          code=$(curl -s -o "$BODY" -w '%{http_code}' https://rudraspirit.com/)
+          echo "HTTP $code, $(wc -c < "$BODY") bytes"
+          echo "--- stylesheet hrefs ---"
+          grep -o -i "<link[^>]*rel=['\"]stylesheet['\"][^>]*>" "$BODY" \
+            | grep -o "href=['\"][^'\"]*['\"]" | sed "s/href=//; s/['\"]//g" | sed 's/?ver=.*//' | sort -u
+          echo "--- counts ---"
+          echo "stylesheet links: $(grep -c -i "rel=['\"]stylesheet['\"]" "$BODY")"
+          echo "vemus theme css refs: $(grep -c 'themes/vemus' "$BODY")"
+          echo "elementor css refs: $(grep -c 'elementor' "$BODY")"
+          echo "leaking shortcodes: $(grep -o '\[[a-z0-9_-]\+[^]]*\]' "$BODY" | grep -iE 'form|gallery|shortcode' | head -3)"
 
-      - name: Live vs repo file differences (vemus-addon and vemus-child)
+      - name: Can the browser fetch the theme stylesheets
         run: |
-          timeout 180 ssh -p $SSH_PORT -o StrictHostKeyChecking=accept-new $SSH_USER@$SSH_HOST "
-            cd $REMOTE_PATH/wp-content
-            find themes/vemus-child plugins/vemus-addon -type f -name '*.php' -newermt '2026-07-01' -printf '%TY-%Tm-%Td %p\n' 2>/dev/null | sort | tail -40
-          " || echo "step failed, continuing"
+          for u in \
+            "https://rudraspirit.com/wp-content/themes/vemus/style.css" \
+            "https://rudraspirit.com/wp-content/themes/vemus-child/style.css" \
+            "https://rudraspirit.com/wp-content/themes/vemus/assets/css/app.css"; do
+            echo "$(curl -s -o /dev/null -w '%{http_code} %{size_download}b' "$u")  $u"
+          done
 
-      - name: Recent PHP errors
+      - name: Theme stylesheet permissions on disk
         run: |
           timeout 120 ssh -p $SSH_PORT -o StrictHostKeyChecking=accept-new $SSH_USER@$SSH_HOST "
-            cd $REMOTE_PATH
-            for f in error_log wp-content/debug.log ../error_log ../../error_log; do
-              if [ -f \"\$f\" ]; then echo \"=== \$f (tail 25) ===\"; tail -25 \"\$f\"; fi
-            done
-          " || echo "step failed, continuing"
+            cd $REMOTE_PATH/wp-content/themes
+            ls -la vemus-child/style.css vemus/style.css 2>&1
+            echo '--- dir perms ---'
+            ls -ld vemus vemus-child 2>&1
+          " || echo "STEP FAILED"
