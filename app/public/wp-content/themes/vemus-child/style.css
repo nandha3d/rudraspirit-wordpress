@@ -3404,3 +3404,235 @@ body.home #main-content {
         font-size: 13px !important;
     }
 }
+
+/* ====================================================================
+ * MOBILE RESPONSIVE LAYOUT
+ * --------------------------------------------------------------------
+ * 1. Kill horizontal overflow. Sections whose background box ended up
+ *    narrower than their content left the document wider than the
+ *    viewport, so the whole page sat scrolled sideways: dark section
+ *    backgrounds showed as thin strips down the left edge while their
+ *    light text landed outside them (reading as "missing" words), and
+ *    everything in normal flow was clipped on the left.
+ *    `overflow-x: clip` is used rather than `hidden` because it does not
+ *    turn the element into a scroll container, so the sticky header keeps
+ *    working. `hidden` is declared first as a fallback for old browsers.
+ * ==================================================================== */
+@media (max-width: 991px) {
+    html,
+    body {
+        overflow-x: hidden;
+        overflow-x: clip;
+        max-width: 100% !important;
+    }
+
+    #main-content,
+    #themesflat-content,
+    .site-main,
+    .page-wrap,
+    #footer {
+        max-width: 100% !important;
+        overflow-x: clip !important;
+    }
+
+    .container,
+    .container-fluid,
+    .tf-container,
+    .elementor-section,
+    .elementor-container,
+    .elementor-widget-wrap {
+        max-width: 100% !important;
+    }
+
+    .row {
+        max-width: 100% !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+    }
+
+    img,
+    video,
+    iframe,
+    table {
+        max-width: 100% !important;
+    }
+
+    h1, h2, h3, h4, h5, h6,
+    p, span, a, li {
+        overflow-wrap: break-word !important;
+    }
+}
+
+/* ====================================================================
+ * 2. HERO BANNER: fit the artwork to the device width.
+ *    The desktop rule locks the slide to `aspect-ratio: 16 / 6.85` with a
+ *    520px minimum height and `object-fit: cover`. On a ~390px phone that
+ *    forces a wide banner into a tall portrait box, so the image is blown
+ *    up and cropped down to a narrow centre slice — the artwork's own
+ *    headline and captions are cropped straight off the left edge.
+ *    On mobile the slide is instead sized by the image itself: full device
+ *    width, natural height, nothing cropped.
+ * ==================================================================== */
+@media (max-width: 991px) {
+    .tf-slideshow.slider-content .slider_wrap,
+    .tf-slideshow .slider_wrap {
+        aspect-ratio: auto !important;
+        height: auto !important;
+        min-height: 0 !important;
+        max-height: none !important;
+    }
+
+    .tf-slideshow.slider-content .slider_wrap .sld-image,
+    .tf-slideshow.slider-content .slider_wrap .sld-image2,
+    .tf-slideshow .slider_wrap .sld-image,
+    .tf-slideshow .slider_wrap .sld-image2 {
+        position: relative !important;
+        inset: auto !important;
+        top: auto !important;
+        right: auto !important;
+        bottom: auto !important;
+        left: auto !important;
+        width: 100% !important;
+        height: auto !important;
+    }
+
+    .tf-slideshow.slider-content .slider_wrap .sld-image img,
+    .tf-slideshow.slider-content .slider_wrap .sld-image2 img,
+    .tf-slideshow .slider_wrap .sld-image img,
+    .tf-slideshow .slider_wrap .sld-image2 img {
+        width: 100% !important;
+        height: auto !important;
+        object-fit: contain !important;
+        object-position: center center !important;
+    }
+
+    /* Overlay copy is pinned to the bottom of the artwork instead of being
+       stretched over the full slide, so it can never be taller than the
+       image and spill out of the banner. */
+    .tf-slideshow.slider-content .slider_wrap .sld-content,
+    .tf-slideshow .slider_wrap .sld-content {
+        inset: auto 0 0 0 !important;
+        top: auto !important;
+        height: auto !important;
+        align-items: flex-end !important;
+        justify-content: center !important;
+        padding: 0 16px 34px !important;
+    }
+
+    .tf-slideshow.slider-content .slider_wrap .content-sld,
+    .tf-slideshow .slider_wrap .content-sld {
+        max-width: 100% !important;
+        align-items: center !important;
+    }
+
+    .tf-slideshow .slider_wrap .title-sld-2,
+    .hero-main-title-rudra {
+        font-size: clamp(26px, 7.5vw, 40px) !important;
+        margin: 4px 0 10px !important;
+    }
+
+    .hero-tagline-auth {
+        font-size: clamp(14px, 4vw, 18px) !important;
+        letter-spacing: 1px;
+    }
+
+    .hero-features-bar {
+        font-size: 11px !important;
+        letter-spacing: 1.5px !important;
+        margin-bottom: 8px !important;
+    }
+
+    .tf-slideshow .slider_wrap .sub-title-sld {
+        font-size: 14px !important;
+        margin-bottom: 16px !important;
+    }
+
+    .tf-slideshow .slider_wrap .tf-btn {
+        padding: 12px 26px !important;
+        font-size: 13px !important;
+        letter-spacing: 1px !important;
+    }
+}
+
+/* ====================================================================
+ * 3. Section headings: cap runaway desktop type on small screens.
+ * ==================================================================== */
+@media (max-width: 767px) {
+    #themesflat-content h1,
+    #themesflat-content .elementor-heading-title.elementor-size-xxl,
+    #themesflat-content .elementor-heading-title.elementor-size-xl {
+        font-size: clamp(26px, 7.5vw, 38px) !important;
+        line-height: 1.2 !important;
+    }
+
+    #themesflat-content h2,
+    #themesflat-content .elementor-heading-title {
+        font-size: clamp(20px, 6vw, 30px) !important;
+        line-height: 1.25 !important;
+    }
+
+    #themesflat-content h3 {
+        font-size: clamp(17px, 5vw, 24px) !important;
+        line-height: 1.3 !important;
+    }
+}
+
+/* ====================================================================
+ * 4. Newsletter / subscribe forms: stack full width instead of sitting on
+ *    one unstyled row that runs off the edge of the screen.
+ *    Cart and checkout keep their own dedicated form styling.
+ * ==================================================================== */
+@media (max-width: 991px) {
+    body:not(.woocommerce-cart):not(.woocommerce-checkout) .tf-newsletter form,
+    body:not(.woocommerce-cart):not(.woocommerce-checkout) .newsletter-form,
+    body:not(.woocommerce-cart):not(.woocommerce-checkout) .form-newsletter,
+    body:not(.woocommerce-cart):not(.woocommerce-checkout) form.wpcf7-form,
+    body:not(.woocommerce-cart):not(.woocommerce-checkout) .mc4wp-form form {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 10px !important;
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+
+    body:not(.woocommerce-cart):not(.woocommerce-checkout) input[type="email"] {
+        width: 100% !important;
+        max-width: 100% !important;
+        height: 48px !important;
+        box-sizing: border-box !important;
+        padding: 0 14px !important;
+        border: 1px solid #dcdcdc !important;
+        border-radius: 8px !important;
+        background: #ffffff !important;
+        color: #191410 !important;
+        font-size: 15px !important;
+    }
+
+    body:not(.woocommerce-cart):not(.woocommerce-checkout) input[type="submit"] {
+        width: 100% !important;
+        max-width: 100% !important;
+        height: 48px !important;
+        box-sizing: border-box !important;
+        border: none !important;
+        border-radius: 8px !important;
+        background: #3B1E0C !important;
+        color: #FFFFFF !important;
+        font-size: 14px !important;
+        font-weight: 600 !important;
+        letter-spacing: 1px !important;
+        text-transform: uppercase !important;
+        cursor: pointer !important;
+    }
+}
+
+/* ====================================================================
+ * 5. Clearance for the fixed mobile bottom bar so the footer's last row
+ *    is not hidden behind it.
+ * ==================================================================== */
+@media (max-width: 991px) {
+    #footer .footer-bottom,
+    #footer .footer-bottom-wrap {
+        padding-bottom: 80px !important;
+    }
+}
