@@ -1,101 +1,73 @@
 name: Remote Diagnose (read-only)
 
-# Read-only inspection. Writes nothing.
+# Read-only. Writes nothing.
 #
-# Current question: curl sees 13 stylesheets that all return 200, but a real
-# browser applies none of them. HTML parses (headings and images render), CSS
-# does not apply. curl cannot see why, because it neither parses HTML nor
-# enforces MIME rules. These checks target the causes that behave exactly that
-# way: wrong Content-Type under nosniff, stylesheet links stranded outside
-# <head> by malformed markup, output emitted before <!DOCTYPE>, and responses
-# that differ by User-Agent.
+# Ruled out so far: MIME type, markup structure, links outside <head>, output
+# before <!DOCTYPE>, User-Agent variance, HTTP caching, service workers
+# (confirmed by an Incognito test that still rendered unstyled).
+#
+# Untested until now: content compression. Every earlier curl omitted
+# Accept-Encoding, so the server replied uncompressed and looked perfect. A
+# browser always requests gzip/br. If the compressed variant is corrupt, the
+# browser discards the CSS and JS while images - already-compressed binaries
+# that gzip leaves alone - keep loading. That is precisely the split reported.
 
 on:
   workflow_dispatch:
 
 jobs:
   diagnose:
-    name: Why does the browser ignore the CSS
+    name: Compressed vs uncompressed asset delivery
     runs-on: ubuntu-latest
     env:
-      MOBILE_UA: "Mozilla/5.0 (Linux; Android 13; SM-G991B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Mobile Safari/537.36"
+      CSS: "https://rudraspirit.com/wp-content/themes/vemus-child/style.css"
+      MAIN: "https://rudraspirit.com/wp-content/themes/vemus/assets/css/vemus-main.css"
+      HOME: "https://rudraspirit.com/"
 
     steps:
-      - name: Response headers for the theme stylesheets
+      - name: Headers under each Accept-Encoding
         run: |
-          for u in \
-            "https://rudraspirit.com/wp-content/themes/vemus-child/style.css" \
-            "https://rudraspirit.com/wp-content/themes/vemus/assets/css/vemus-main.css"; do
-            echo "=== $u ==="
-            curl -sI "$u" | grep -iE 'HTTP/|content-type|content-encoding|content-length|x-content-type-options|cf-|server|location' || true
+          for enc in "identity" "gzip" "br" "gzip, deflate, br"; do
+            echo "=== Accept-Encoding: $enc ==="
+            curl -sI -H "Accept-Encoding: $enc" "$CSS" \
+              | grep -iE 'HTTP/|content-encoding|content-type|content-length|vary|server' || true
             echo
           done
 
-      - name: First bytes of the document (output before DOCTYPE, BOM)
+      - name: Does the gzip variant actually decompress
         run: |
-          curl -s https://rudraspirit.com/ | head -c 300 | od -c | head -12
+          echo "--- raw bytes with Accept-Encoding: gzip ---"
+          curl -s -H "Accept-Encoding: gzip" -o /tmp/gz.bin "$CSS"
+          echo "size: $(wc -c < /tmp/gz.bin)"
+          echo "magic:"; od -An -tx1 -N4 /tmp/gz.bin
+          if gzip -t /tmp/gz.bin 2>/dev/null; then
+            echo "gzip integrity: OK"
+            echo "decompressed head:"; gunzip -c /tmp/gz.bin | head -c 100; echo
+          else
+            echo "gzip integrity: FAILED - body is not valid gzip"
+            echo "first 100 bytes as text:"; head -c 100 /tmp/gz.bin; echo
+          fi
 
-      - name: Are the stylesheet links actually inside head
+      - name: What curl --compressed gets (closest to a browser)
         run: |
-          BODY=$(mktemp)
-          curl -s https://rudraspirit.com/ -o "$BODY"
-          python3 - "$BODY" <<'PY'
-          import sys, re
-          h = open(sys.argv[1], encoding='utf-8', errors='replace').read()
-          def at(p):
-              i = h.lower().find(p)
-              return i if i >= 0 else None
-          print("doctype at:", at('<!doctype'))
-          print("<head> at :", at('<head'))
-          print("</head> at:", at('</head>'))
-          print("<body> at :", at('<body'))
-          links = [m.start() for m in re.finditer(r"<link[^>]*stylesheet", h, re.I)]
-          print("stylesheet link offsets:", links[:20])
-          eh = at('</head>')
-          if eh is not None and links:
-              inside = [o for o in links if o < eh]
-              print(f"links inside head: {len(inside)} / {len(links)}")
-          # unbalanced structures that strand the rest of head
-          print("unclosed <!-- count:", h.count('<!--') - h.count('-->'))
-          print("<script open:", len(re.findall(r'<script\b', h, re.I)),
-                " </script> close:", len(re.findall(r'</script>', h, re.I)))
-          print("<style open:", len(re.findall(r'<style\b', h, re.I)),
-                " </style> close:", len(re.findall(r'</style>', h, re.I)))
-          PY
-
-      - name: Does the response differ for a mobile browser
-        run: |
-          for ua in "curl-default" "$MOBILE_UA"; do
-            if [ "$ua" = "curl-default" ]; then
-              out=$(curl -s https://rudraspirit.com/)
-            else
-              out=$(curl -s -A "$ua" https://rudraspirit.com/)
-            fi
-            echo "UA=${ua:0:40}  bytes=$(printf '%s' "$out" | wc -c)  stylesheets=$(printf '%s' "$out" | grep -c -i 'rel=.stylesheet.')"
+          for u in "$CSS" "$MAIN"; do
+            echo "=== $u ==="
+            curl -s --compressed -o /tmp/c.out -w 'http=%{http_code} type=%{content_type} size=%{size_download}\n' "$u"
+            echo "first 100 chars:"; head -c 100 /tmp/c.out; echo
+            echo "looks like css: $(head -c 2000 /tmp/c.out | grep -c -E '\{|/\*')"
+            echo
           done
 
-      - name: Fetch the child stylesheet as a browser would
+      - name: Home page HTML under compression
         run: |
-          echo "--- with Referer and Accept, mobile UA ---"
-          curl -s -o /tmp/css -w 'http=%{http_code} type=%{content_type} size=%{size_download}\n' \
-            -A "$MOBILE_UA" \
-            -H "Accept: text/css,*/*;q=0.1" \
-            -H "Referer: https://rudraspirit.com/" \
-            "https://rudraspirit.com/wp-content/themes/vemus-child/style.css"
-          echo "--- first 120 chars actually returned ---"
-          head -c 120 /tmp/css; echo
+          curl -s --compressed -o /tmp/h.html "$HOME"
+          echo "bytes: $(wc -c < /tmp/h.html)"
+          echo "stylesheet links: $(grep -c -i 'rel=.stylesheet.' /tmp/h.html || true)"
+          echo "first 80 chars:"; head -c 80 /tmp/h.html; echo
 
-      - name: Service worker / PWA / offline shell registration
+      - name: Brotli variant specifically
         run: |
-          BODY=$(mktemp)
-          curl -s https://rudraspirit.com/ -o "$BODY"
-          echo "serviceWorker mentions: $(grep -c -i 'serviceworker' "$BODY")"
-          grep -o -i '[^"]*service[-_]*worker[^"]*' "$BODY" | head -5
-          echo "sw.js / pwa refs:"
-          grep -o -iE '[a-z0-9./_-]*(sw|pwa|offline|workbox)[a-z0-9./_-]*\.js' "$BODY" | sort -u | head -10
-          echo "manifest link:"
-          grep -o -i '<link[^>]*manifest[^>]*>' "$BODY" | head -3
-          echo "--- known sw endpoints ---"
-          for u in /sw.js /service-worker.js /wp-content/uploads/pwa-service-worker.js /offline.html; do
-            echo "$(curl -s -o /dev/null -w '%{http_code} %{content_type}' "https://rudraspirit.com$u")  $u"
-          done
+          curl -s -H "Accept-Encoding: br" -o /tmp/br.bin "$CSS"
+          echo "size: $(wc -c < /tmp/br.bin)"
+          echo "magic:"; od -An -tx1 -N4 /tmp/br.bin
+          echo "first 80 bytes as text:"; head -c 80 /tmp/br.bin; echo
