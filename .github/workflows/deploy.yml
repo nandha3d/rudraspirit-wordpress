@@ -45,9 +45,12 @@ jobs:
       - name: Verify Remote Server Connection & WP-CLI
         run: |
           echo "Verifying connection to $SSH_USER@$SSH_HOST:$SSH_PORT..."
-          # `wp core version` (unlike `wp --version`) only succeeds inside a real
-          # WordPress root, so this catches a wrong REMOTE_PATH before rsync runs.
-          ssh -o StrictHostKeyChecking=accept-new -p $SSH_PORT $SSH_USER@$SSH_HOST "export PATH=/opt/alt/php83/usr/bin:\$PATH; cd $REMOTE_PATH && wp core version && test -d wp-content/themes"
+          # Confirm REMOTE_PATH really is the WordPress root using filesystem
+          # checks only. Do NOT boot WordPress here (no `wp core version`): if the
+          # site is currently fataling, WP-CLI hangs and blocks the very deploy
+          # that would fix it.
+          timeout 120 ssh -o StrictHostKeyChecking=accept-new -p $SSH_PORT $SSH_USER@$SSH_HOST \
+            "test -f $REMOTE_PATH/wp-config.php && test -d $REMOTE_PATH/wp-content/themes && test -d $REMOTE_PATH/wp-content/plugins && echo 'WordPress root verified at $REMOTE_PATH'"
 
       - name: Deploy Custom Code (Theme & Plugins)
         if: ${{ github.event_name == 'push' || github.event.inputs.deploy_mode == 'code_only' }}
@@ -75,7 +78,11 @@ jobs:
       - name: Flush WordPress Cache & Rewrite Rules
         run: |
           echo "Flushing production object cache and permalinks..."
-          ssh -p $SSH_PORT -o StrictHostKeyChecking=accept-new $SSH_USER@$SSH_HOST "export PATH=/opt/alt/php83/usr/bin:\$PATH; cd $REMOTE_PATH && wp cache flush && wp rewrite flush"
+          # These bootstrap WordPress, so they can hang or fail while the site is
+          # broken. Never let a cache flush block a deploy that carries the fix.
+          timeout 180 ssh -p $SSH_PORT -o StrictHostKeyChecking=accept-new $SSH_USER@$SSH_HOST \
+            "export PATH=/opt/alt/php83/usr/bin:\$PATH; cd $REMOTE_PATH && wp cache flush && wp rewrite flush" \
+            || echo "WARNING: cache/rewrite flush did not complete - files are deployed, continuing to health check."
 
       - name: Post-Deployment Health Check
         run: |
