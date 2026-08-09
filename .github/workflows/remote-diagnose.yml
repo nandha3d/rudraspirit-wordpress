@@ -84,3 +84,18 @@ jobs:
             "https://rudraspirit.com/wp-content/themes/vemus-child/style.css"
           echo "--- first 120 chars actually returned ---"
           head -c 120 /tmp/css; echo
+
+      - name: Service worker / PWA / offline shell registration
+        run: |
+          BODY=$(mktemp)
+          curl -s https://rudraspirit.com/ -o "$BODY"
+          echo "serviceWorker mentions: $(grep -c -i 'serviceworker' "$BODY")"
+          grep -o -i '[^"]*service[-_]*worker[^"]*' "$BODY" | head -5
+          echo "sw.js / pwa refs:"
+          grep -o -iE '[a-z0-9./_-]*(sw|pwa|offline|workbox)[a-z0-9./_-]*\.js' "$BODY" | sort -u | head -10
+          echo "manifest link:"
+          grep -o -i '<link[^>]*manifest[^>]*>' "$BODY" | head -3
+          echo "--- known sw endpoints ---"
+          for u in /sw.js /service-worker.js /wp-content/uploads/pwa-service-worker.js /offline.html; do
+            echo "$(curl -s -o /dev/null -w '%{http_code} %{content_type}' "https://rudraspirit.com$u")  $u"
+          done
